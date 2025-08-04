@@ -66,19 +66,56 @@
       ]);
 
       // Marcadores de ruas
-      ruas.forEach(r => {
-        if (!r.Central_Point) return;
-        const parts = r.Central_Point.split(',').map(s => parseFloat(s.trim()));
-        if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
+     // DEBUG: inspeciona o que veio
+console.log('Ruas recebidas:', ruas);
+if (!Array.isArray(ruas)) {
+  console.error('Esperava um array de ruas, recebeu:', ruas);
+} else if (ruas.length === 0) {
+  console.warn('Array de ruas está vazio — verifique o endpoint JSON');
+}
 
-        const position = { lat: parts[0], lng: parts[1] };
-        const reputacao = parseFloat(r.ReputacaoComp || 0).toFixed(2);
-        const cor = r.Cor_Reputacao || '#888';
+ruas.forEach(r => {
+  console.log('Processando rua:', r);
 
-        const marker = new google.maps.Marker({
-  position,
-  map,
-  title: `${r.Nome} — Reputação: ${reputacao}`,
+  if (!r.Central_Point) {
+    console.warn('Pulando rua sem Central_Point:', r.Nome || r.ID, r);
+    return;
+  }
+
+  const parts = r.Central_Point.split(',').map(s => parseFloat(s.trim()));
+  if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) {
+    console.warn('Formato inválido de Central_Point para rua:', r.Nome || r.ID, r.Central_Point);
+    return;
+  }
+
+  const position = { lat: parts[0], lng: parts[1] };
+  const reputacao = parseFloat(r.ReputacaoComp || 0).toFixed(2);
+  const cor = r.Cor_Reputacao || '#888';
+
+  console.log('Criando marcador de rua em', position, 'com reputação', reputacao, 'e cor', cor);
+
+  const marker = new google.maps.Marker({
+    position,
+    map,
+    title: `${r.Nome} — Reputação: ${reputacao}`,
+    // sem icon custom por enquanto
+  });
+
+  const resumo = (typeof r.Resumo_IA === 'string') ? r.Resumo_IA : '';
+  const truncated = resumo.length > 200 ? resumo.slice(0, 200) + '...' : resumo;
+
+  const infoContent = `
+    <div class="info-window">
+      <div class="badge" style="background:${cor};">Reputação: ${reputacao}</div>
+      <div class="title">${r.Nome || 'Rua sem nome'}</div>
+      <div class="small">${truncated}</div>
+      <div style="margin-top:6px;">
+        <a href="#" onclick="openGlideDetail('${(r.DeepLink||'')}')">Ver no app</a>
+      </div>
+    </div>
+  `;
+  const infowindow = new google.maps.InfoWindow({ content: infoContent });
+  marker.addListener('click', () => infowindow.open({ map, anchor: marker }));
 });
 
         const resumo = (typeof r.Resumo_IA === 'string') ? r.Resumo_IA : '';
@@ -161,4 +198,5 @@
   </script>
 </body>
 </html>
+
 
