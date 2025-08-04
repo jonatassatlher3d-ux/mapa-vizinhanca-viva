@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Mapa Vizinhaça Viva</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body, html { margin:0; padding:0; height:100%; }
+    #map { height:100%; width:100%; }
+    .info-window { font-family: Arial, sans-serif; font-size: 14px; max-width: 260px; }
+    .badge { padding:4px 8px; border-radius:4px; color:#fff; display:inline-block; margin-bottom:6px; font-weight:600; }
+    .title { font-size:16px; font-weight:700; margin-bottom:4px; }
+    .small { font-size:12px; color:#555; }
+  </style>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik="></script>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    // === URLs do seu Apps Script JSON ===
+    const BASE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec';
+    const RUAS_URL = `${BASE_SCRIPT_URL}?sheet=Ruas`;
+    const ALERTAS_URL = `${BASE_SCRIPT_URL}?sheet=AlertasTemporarios`;
+
+    // busca JSON (tratando dupla stringificação comum em Apps Script)
+    async function fetchJson(url) {
+      const res = await fetch(url);
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        return JSON.parse(JSON.parse(text));
+      }
+    }
+
+    // cria ícone circular colorido para ruas
+    function createCircleIcon(color) {
+      return {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 10,
+        fillColor: color || '#777',
+        fillOpacity: 0.9,
+        strokeWeight: 1,
+        strokeColor: '#222'
+      };
+    }
+
+    // inicializa mapa
+    async function initMap() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const latParam = parseFloat(urlParams.get('lat'));
+      const lngParam = parseFloat(urlParams.get('lng'));
+
+      const defaultCenter = { lat: -19.82, lng: -40.27 }; // Aracruz como fallback
+      const center = (!isNaN(latParam) && !isNaN(lngParam)) ? { lat: latParam, lng: lngParam } : defaultCenter;
+
+      const map = new google.maps.Map(document.getElementById('map'), {
+        center,
+        zoom: 13,
+        streetViewControl: false,
+        mapTypeControl: false,
+      });
+
+      // carregar dados simultaneamente
+      const [ruas, alertas] = await Promise.all([
+        fetchJson(RUAS_URL),
+        fetchJson(ALERTAS_URL)
+      ]);
+
+      // adiciona marcadores de ruas
+      ruas.forEach(r => {
+        if (!r.Central_Point) return;
+        const parts = r.Central_Point.split(',').map(s => parseFloat(s.trim()));
+        if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
+
+        const position = { lat: parts[0], lng: parts[1] };
+        const reputacao = parseFloat(r.ReputacaoComp || 0).toFixed(2);
+        const cor = r.Cor_Reputacao || '#888';
+
+        const marker = new google.maps.Marker({
+          position,
+          map,
+          title: `${r.Nome} — Reputação: ${reputacao}`,
+          icon: createCircleIcon(cor),
+        });
+
+        // conteúdo da info window
+        const infoContent = `
+          <div class="info-window">
+            <div class="badge" style="background:${cor};">Reputação: ${reputacao}</div>
+            <div class="title">${r.Nome || 'Rua sem nome'}</div>
+            <div class="small">${(r.Resumo_IA || '').substring(0, 200)}${(r.Resumo_IA && r.Resumo_IA.length > 200 ? '...' : '')}</div>
+            <div style="margin-top:6px;">
+              <a href="#" onclick="openGlideDetail('${r.ID}')">Ver no app</a>
+            </div>
+          </div>
+        `;
+        const infowindow = new google.maps.InfoWindow({ content: infoContent });
+        marker.addListener('click', () => {
+          infowindow.open({ map, anchor: marker });
+        });
+      });
+
+      // mapa de ícones de alerta — personalize os URLs abaixo
+      const iconMap = {
+        'Buraco': 'https://cdn-icons-png.flaticon.com/512/1866/1866475.png',
+        'Entulho': 'https://cdn-icons-png.flaticon.com/512/54/54324.png',
+        'Queimada': 'https://static.vecteezy.com/system/resources/previews/019/787/026/non_2x/fire-icon-on-transparent-background-free-png.png',
+        'Foco de mosquito': 'https://cdn-icons-png.flaticon.com/512/1905/1905225.png',
+        'Obstrução': 'https://cdn-icons-png.flaticon.com/512/2228/2228942.png',
+        'Ameaça animal': 'https://cdn-icons-png.flaticon.com/512/2622/2622105.png'
+      };
+
+      alertas.forEach(a => {
+        if (!a.Localizacao) return;
+        const parts = a.Localizacao.split(',').map(s => parseFloat(s.trim()));
+        if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
+        const position = { lat: parts[0], lng: parts[1] };
+
+        const tipo = a.Tipo_Alerta || 'Alerta';
+        const titulo = a.Titulo_Alerta || tipo;
+        const status = a.Status || '';
+        const descricao = a.Descricao || '';
+        const confirms = a.Confirmacoes || 0;
+
+        const marker = new google.maps.Marker({
+          position,
+          map,
+          title: titulo,
+          icon: {
+            url: iconMap[tipo] || null,
+            scaledSize: new google.maps.Size(32, 32)
+          }
+        });
+
+        const infoContent = `
+          <div class="info-window">
+            <div class="title">${titulo}</div>
+            <div>Status: ${status}</div>
+            <div>${descricao}</div>
+            <div>Confirmações: ${confirms}</div>
+          </div>
+        `;
+        const infowindow = new google.maps.InfoWindow({ content: infoContent });
+        marker.addListener('click', () => infowindow.open({ map, anchor: marker }));
+      });
+    }
+
+    // exemplo de deep link para abrir detail no Glide (ajuste conforme sua configuração)
+    function openGlideDetail(ruaId) {
+      // isso pode abrir uma URL do seu app Glide; ajuste se precisar
+      window.open(`https://vizinhancaviva.glide.page/dl/394355/s/0e1a84/r/9yPB7MflTeybI.S-71p4rA{ruaId}`, '_blank');
+    }
+
+    // inicializa
+    initMap();
+  </script>
+</body>
+</html>
