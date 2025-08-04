@@ -13,8 +13,8 @@
     .small { font-size:12px; color:#555; }
     a { color: #1a73e8; text-decoration:none; }
   </style>
-  <!-- Chave da Google Maps JS API corrigida -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&libraries=maps,marker&v=beta" defer></script>
+  <!-- Versão estável da API com callback para initMap -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
 </head>
 <body>
   <div id="map"></div>
@@ -44,6 +44,7 @@
       };
     }
 
+    // chamada automaticamente pela API via callback
     async function initMap() {
       const urlParams = new URLSearchParams(window.location.search);
       const latParam = parseFloat(urlParams.get('lat'));
@@ -158,16 +159,6 @@
       const fullUrl = linkOrFragment.startsWith('#') ? `${base}/${linkOrFragment}` : `${base}/${linkOrFragment}`;
       window.open(fullUrl, '_blank');
     }
-
-    // espera carregar a API e então inicializa
-    function waitForMapsAndInit() {
-      if (window.google && window.google.maps) {
-        initMap();
-      } else {
-        setTimeout(waitForMapsAndInit, 100);
-      }
-    }
-    waitForMapsAndInit();
   </script>
 </body>
 </html>
