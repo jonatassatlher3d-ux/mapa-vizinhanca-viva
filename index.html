@@ -11,19 +11,18 @@
     .badge { padding:4px 8px; border-radius:4px; color:#fff; display:inline-block; margin-bottom:6px; font-weight:600; }
     .title { font-size:16px; font-weight:700; margin-bottom:4px; }
     .small { font-size:12px; color:#555; }
+    a { color: #1a73e8; text-decoration:none; }
   </style>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik="></script>
+  <!-- Chave da Google Maps JS API corrigida -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&libraries=maps,marker&v=beta" defer></script>
 </head>
 <body>
   <div id="map"></div>
 
   <script>
-    // === URLs do seu Apps Script JSON ===
-    const BASE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec';
-    const RUAS_URL = `${BASE_SCRIPT_URL}?sheet=Ruas`;
-    const ALERTAS_URL = `${BASE_SCRIPT_URL}?sheet=AlertasTemporarios`;
+    const RUAS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=Ruas';
+    const ALERTAS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=AlertasTemporarios';
 
-    // busca JSON (tratando dupla stringificação comum em Apps Script)
     async function fetchJson(url) {
       const res = await fetch(url);
       const text = await res.text();
@@ -34,7 +33,6 @@
       }
     }
 
-    // cria ícone circular colorido para ruas
     function createCircleIcon(color) {
       return {
         path: google.maps.SymbolPath.CIRCLE,
@@ -46,13 +44,12 @@
       };
     }
 
-    // inicializa mapa
     async function initMap() {
       const urlParams = new URLSearchParams(window.location.search);
       const latParam = parseFloat(urlParams.get('lat'));
       const lngParam = parseFloat(urlParams.get('lng'));
 
-      const defaultCenter = { lat: -19.82, lng: -40.27 }; // Aracruz como fallback
+      const defaultCenter = { lat: -19.82, lng: -40.27 }; // Aracruz fallback
       const center = (!isNaN(latParam) && !isNaN(lngParam)) ? { lat: latParam, lng: lngParam } : defaultCenter;
 
       const map = new google.maps.Map(document.getElementById('map'), {
@@ -62,13 +59,12 @@
         mapTypeControl: false,
       });
 
-      // carregar dados simultaneamente
       const [ruas, alertas] = await Promise.all([
         fetchJson(RUAS_URL),
         fetchJson(ALERTAS_URL)
       ]);
 
-      // adiciona marcadores de ruas
+      // Marcadores de ruas
       ruas.forEach(r => {
         if (!r.Central_Point) return;
         const parts = r.Central_Point.split(',').map(s => parseFloat(s.trim()));
@@ -85,31 +81,31 @@
           icon: createCircleIcon(cor),
         });
 
-        // conteúdo da info window
+        const resumo = (typeof r.Resumo_IA === 'string') ? r.Resumo_IA : '';
+        const truncated = resumo.length > 200 ? resumo.slice(0, 200) + '...' : resumo;
+
         const infoContent = `
           <div class="info-window">
             <div class="badge" style="background:${cor};">Reputação: ${reputacao}</div>
             <div class="title">${r.Nome || 'Rua sem nome'}</div>
-            <div class="small">${(r.Resumo_IA || '').substring(0, 200)}${(r.Resumo_IA && r.Resumo_IA.length > 200 ? '...' : '')}</div>
+            <div class="small">${truncated}</div>
             <div style="margin-top:6px;">
-              <a href="#" onclick="openGlideDetail('${r.ID}')">Ver no app</a>
+              <a href="#" onclick="openGlideDetail('${(r.DeepLink||'')}')">Ver no app</a>
             </div>
           </div>
         `;
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
-        marker.addListener('click', () => {
-          infowindow.open({ map, anchor: marker });
-        });
+        marker.addListener('click', () => infowindow.open({ map, anchor: marker }));
       });
 
-      // mapa de ícones de alerta — personalize os URLs abaixo
+      // Ícones de alerta
       const iconMap = {
-        'Buraco': 'https://cdn-icons-png.flaticon.com/512/1866/1866475.png',
-        'Entulho': 'https://cdn-icons-png.flaticon.com/512/54/54324.png',
-        'Queimada': 'https://static.vecteezy.com/system/resources/previews/019/787/026/non_2x/fire-icon-on-transparent-background-free-png.png',
-        'Foco de mosquito': 'https://cdn-icons-png.flaticon.com/512/1905/1905225.png',
+        'Buraco': 'https://images.emojiterra.com/google/noto-emoji/unicode-16.0/color/1024px/1f573.png',
+        'Entulho': 'https://w7.pngwing.com/pngs/241/366/png-transparent-rubbish-bins-waste-paper-baskets-emoji-sticker-emoji-glass-waste-containment-waste.png',
+        'Queimada': 'https://e7.pngegg.com/pngimages/358/307/png-clipart-fire-illustration-emoji-fire-flame-heater-repairman-leaf-orange-thumbnail.png',
+        'Foco de mosquito': 'https://api.hub.jhu.edu/factory/sites/default/files/styles/hub_medium/public/mosquito_emoji120318_0.jpg',
         'Obstrução': 'https://cdn-icons-png.flaticon.com/512/2228/2228942.png',
-        'Ameaça animal': 'https://cdn-icons-png.flaticon.com/512/2622/2622105.png'
+        'Ameaça animal': 'https://em-content.zobj.net/source/apple/81/snake_1f40d.png'
       };
 
       alertas.forEach(a => {
@@ -147,26 +143,31 @@
       });
     }
 
-    // exemplo de deep link para abrir detail no Glide (ajuste conforme sua configuração)
-function openGlideDetail(linkOrFragment) {
-  if (!linkOrFragment) {
-    alert('Link da rua não disponível');
-    return;
-  }
+    function openGlideDetail(linkOrFragment) {
+      if (!linkOrFragment) {
+        alert('Link da rua não disponível');
+        return;
+      }
 
-  // Se já é uma URL completa (começa com http), abre direto
-  if (linkOrFragment.startsWith('http')) {
-    window.open(linkOrFragment, '_blank');
-    return;
-  }
+      if (linkOrFragment.startsWith('http')) {
+        window.open(linkOrFragment, '_blank');
+        return;
+      }
 
-  // Se for fragmento (começa com "#/..."), junta com a base do app
-  const base = 'https://vizinhancaviva.glide.page';
-  const fullUrl = linkOrFragment.startsWith('#') ? `${base}/${linkOrFragment}` : `${base}/${linkOrFragment}`;
-  window.open(fullUrl, '_blank');
-}
-    // inicializa
-    initMap();
+      const base = 'https://vizinhancaviva.glide.page';
+      const fullUrl = linkOrFragment.startsWith('#') ? `${base}/${linkOrFragment}` : `${base}/${linkOrFragment}`;
+      window.open(fullUrl, '_blank');
+    }
+
+    // espera carregar a API e então inicializa
+    function waitForMapsAndInit() {
+      if (window.google && window.google.maps) {
+        initMap();
+      } else {
+        setTimeout(waitForMapsAndInit, 100);
+      }
+    }
+    waitForMapsAndInit();
   </script>
 </body>
 </html>
