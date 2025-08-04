@@ -76,11 +76,10 @@
         const cor = r.Cor_Reputacao || '#888';
 
         const marker = new google.maps.Marker({
-          position,
-          map,
-          title: `${r.Nome} — Reputação: ${reputacao}`,
-          icon: createCircleIcon(cor),
-        });
+  position,
+  map,
+  title: `${r.Nome} — Reputação: ${reputacao}`,
+});
 
         const resumo = (typeof r.Resumo_IA === 'string') ? r.Resumo_IA : '';
         const truncated = resumo.length > 200 ? resumo.slice(0, 200) + '...' : resumo;
@@ -162,3 +161,4 @@
   </script>
 </body>
 </html>
+
