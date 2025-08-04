@@ -148,11 +148,23 @@
     }
 
     // exemplo de deep link para abrir detail no Glide (ajuste conforme sua configuração)
-    function openGlideDetail(ruaId) {
-      // isso pode abrir uma URL do seu app Glide; ajuste se precisar
-      window.open(`https://vizinhancaviva.glide.page/dl/394355/s/0e1a84/r/9yPB7MflTeybI.S-71p4rA{ruaId}`, '_blank');
-    }
+function openGlideDetail(linkOrFragment) {
+  if (!linkOrFragment) {
+    alert('Link da rua não disponível');
+    return;
+  }
 
+  // Se já é uma URL completa (começa com http), abre direto
+  if (linkOrFragment.startsWith('http')) {
+    window.open(linkOrFragment, '_blank');
+    return;
+  }
+
+  // Se for fragmento (começa com "#/..."), junta com a base do app
+  const base = 'https://vizinhancaviva.glide.page';
+  const fullUrl = linkOrFragment.startsWith('#') ? `${base}/${linkOrFragment}` : `${base}/${linkOrFragment}`;
+  window.open(fullUrl, '_blank');
+}
     // inicializa
     initMap();
   </script>
