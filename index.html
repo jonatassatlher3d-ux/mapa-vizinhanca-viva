@@ -79,7 +79,10 @@
           position,
           map,
           title: `${r.Nome} — Reputação: ${reputacao}`,
-          icon: createCircleIcon(cor),
+          icon: {
+  url: `https://via.placeholder.com/32/${cor.replace('#','')}/ffffff.png?text=+`,
+  scaledSize: new google.maps.Size(32, 32)
+}
         });
 
         const resumo = (typeof r.Resumo_IA === 'string') ? r.Resumo_IA : '';
@@ -162,3 +165,4 @@
   </script>
 </body>
 </html>
+
