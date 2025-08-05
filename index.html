@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Mapa Vizinhança Viva</title>
+  <title>Mapa Vizinhança Viva - Bairros</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
@@ -10,8 +10,8 @@
     .info-window { font-family: Arial, sans-serif; font-size: 14px; max-width: 260px; }
     .badge { padding: 4px 8px; border-radius: 4px; color: #fff; display: inline-block; margin-bottom: 6px; font-weight: 600; }
     .title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .small { font-size: 12px; color: #ccc; }
-    a { color: #4ea1ff; text-decoration: none; }
+    .small { font-size: 12px; color: #555; }
+    a { color: #1a73e8; text-decoration: none; }
   </style>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
 </head>
@@ -19,7 +19,7 @@
   <div id="map"></div>
 
   <script>
-    const RUAS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=Ruas';
+    const BAIRROS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=Bairros';
     const ALERTAS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=AlertasTemporarios';
 
     const icons = {
@@ -30,12 +30,12 @@
       vermelho:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10'
     };
 
-    function getIconUrlByReputacao(reputacao) {
-      if (isNaN(reputacao)) return icons.vermelho;
-      if (reputacao >= 4.5) return icons.verde;
-      if (reputacao >= 3.5) return icons.azul;
-      if (reputacao >= 2.5) return icons.amarelo;
-      if (reputacao >= 1.5) return icons.laranja;
+    function getIconUrlByReputacao(rep) {
+      if (isNaN(rep)) return icons.vermelho;
+      if (rep >= 4.5) return icons.verde;
+      if (rep >= 3.5) return icons.azul;
+      if (rep >= 2.5) return icons.amarelo;
+      if (rep >= 1.5) return icons.laranja;
       return icons.vermelho;
     }
 
@@ -59,59 +59,55 @@
 
       const map = new google.maps.Map(document.getElementById('map'), {
         center,
-        zoom: 13,
+        zoom: 12,
         streetViewControl: false,
         mapTypeControl: false,
         styles: [
-          { elementType: 'geometry', stylers: [{ color: '#1d1d1d' }] },
-          { elementType: 'labels.text.stroke', stylers: [{ color: '#1d1d1d' }] },
-          { elementType: 'labels.text.fill', stylers: [{ color: '#a8a8a8' }] },
-          { featureType: 'administrative', elementType: 'geometry', stylers: [{ visibility: 'off' }] },
-          { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-          { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2c2c2c' }] },
-          { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#1c1c1c' }] },
-          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] }
+          { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+          { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+          { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+          { featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+          { featureType: 'poi', elementType: 'geometry', stylers: [{ visibility: 'off' }] },
+          { featureType: 'water', stylers: [{ color: '#2f3b52' }] },
+          { featureType: 'landscape', stylers: [{ color: '#1d2c4d' }] },
+          { elementType: 'labels.text.stroke', stylers: [{ color: '#1a3646' }] },
+          { elementType: 'labels.text.fill', stylers: [{ color: '#ffffff' }] }
         ]
       });
 
-      const [ruas, alertas] = await Promise.all([
-        fetchJson(RUAS_URL),
+      const [bairros, alertas] = await Promise.all([
+        fetchJson(BAIRROS_URL),
         fetchJson(ALERTAS_URL)
       ]);
 
-      ruas.forEach(r => {
-        const central = r.Central_Point || r["Central Point"] || r.Coordenadas || '';
+      bairros.forEach(b => {
+        const central = b.Central_Point || b["Central Point"] || b.Coordenadas || '';
         if (!central) return;
-
         const parts = central.split(',').map(s => parseFloat(s.trim()));
         if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
 
         const position = { lat: parts[0], lng: parts[1] };
-        const reputacao = parseFloat(r.ReputacaoComp || 0);
+        const reputacao = parseFloat(b.ReputacaoComp || 0);
         const reputacaoLabel = reputacao.toFixed(2);
         const iconUrl = getIconUrlByReputacao(reputacao);
 
         const marker = new google.maps.Marker({
           position,
           map,
-          title: `${r.Nome} — Reputação: ${reputacaoLabel}`,
-          icon: {
-            url: iconUrl,
-            scaledSize: new google.maps.Size(32, 32)
-          }
+          title: `${b.Nome} — Reputação: ${reputacaoLabel}`,
+          icon: { url: iconUrl, scaledSize: new google.maps.Size(32, 32) }
         });
 
-        const resumo = (typeof r.Resumo_IA === 'string') ? r.Resumo_IA : '';
+        const resumo = (typeof b.Resumo_IA === 'string') ? b.Resumo_IA : '';
         const truncated = resumo.length > 200 ? resumo.slice(0, 200) + '...' : resumo;
 
         const infoContent = `
           <div class="info-window">
-            <div class="badge" style="background:#444;">Reputação: ${reputacaoLabel}</div>
-            <div class="title">${r.Nome || 'Rua sem nome'}</div>
+            <div class="badge" style="background:#333;">Reputação: ${reputacaoLabel}</div>
+            <div class="title">${b.Nome || 'Bairro sem nome'}</div>
             <div class="small">${truncated}</div>
             <div style="margin-top:6px;">
-              <a href="#" onclick="openGlideDetail('${(r.DeepLink || '')}')">Ver detalhes</a>
+              <a href="#" onclick="openGlideDetail('${(b.DeepLink || '')}')">Ver no app</a>
             </div>
           </div>
         `;
@@ -125,8 +121,7 @@
         'Queimada': 'https://e7.pngegg.com/pngimages/358/307/png-clipart-fire-illustration-emoji-fire-flame-heater-repairman-leaf-orange-thumbnail.png',
         'Foco de mosquito': 'https://api.hub.jhu.edu/factory/sites/default/files/styles/hub_medium/public/mosquito_emoji120318_0.jpg',
         'Obstrução': 'https://cdn-icons-png.flaticon.com/512/2228/2228942.png',
-        'Ameaça animal': 'https://em-content.zobj.net/source/apple/81/snake_1f40d.png',
-        'default': 'https://cdn-icons-png.flaticon.com/512/565/565547.png'
+        'Ameaça animal': 'https://em-content.zobj.net/source/apple/81/snake_1f40d.png'
       };
 
       alertas.forEach(a => {
@@ -141,14 +136,12 @@
         const descricao = a.Descricao || '';
         const confirms = a.Confirmacoes || 0;
 
-        const iconUrl = iconMap[tipo] || iconMap.default;
-
         const marker = new google.maps.Marker({
           position,
           map,
           title: titulo,
           icon: {
-            url: iconUrl,
+            url: iconMap[tipo] || null,
             scaledSize: new google.maps.Size(32, 32)
           }
         });
@@ -168,15 +161,13 @@
 
     function openGlideDetail(linkOrFragment) {
       if (!linkOrFragment) {
-        alert('Link da rua não disponível');
+        alert('Link do bairro não disponível');
         return;
       }
-
       const base = 'https://vizinhancaviva.glide.page';
       const fullUrl = linkOrFragment.startsWith('http') ? linkOrFragment : `${base}/${linkOrFragment}`;
-      window.location.href = fullUrl; // Abre na mesma aba
+      window.location.href = fullUrl;
     }
   </script>
 </body>
 </html>
-
