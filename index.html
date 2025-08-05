@@ -50,86 +50,22 @@
       const center = (!isNaN(latParam) && !isNaN(lngParam)) ? { lat: latParam, lng: lngParam } : defaultCenter;
 
       const map = new google.maps.Map(document.getElementById('map'), {
-  center,
-  zoom: 13,
-  streetViewControl: false,
-  mapTypeControl: false,
-  styles: [
-    { "elementType": "geometry", "stylers": [{ "color": "#1d2c4d" }] },
-    { "elementType": "labels.text.fill", "stylers": [{ "color": "#8ec3b9" }] },
-    { "elementType": "labels.text.stroke", "stylers": [{ "color": "#1a3646" }] },
-    {
-      "featureType": "administrative",
-      "elementType": "geometry.stroke",
-      "stylers": [{ "color": "#4b6878" }]
-    },
-    {
-      "featureType": "landscape",
-      "elementType": "geometry",
-      "stylers": [{ "color": "#0f1b2a" }]
-    },
-    {
-      "featureType": "poi",
-      "elementType": "labels.text.fill",
-      "stylers": [{ "color": "#8eb3c3" }]
-    },
-    {
-      "featureType": "poi.park",
-      "elementType": "geometry",
-      "stylers": [{ "color": "#0a2f35" }]
-    },
-    {
-      "featureType": "poi.park",
-      "elementType": "labels.text.fill",
-      "stylers": [{ "color": "#6b9a76" }]
-    },
-    {
-      "featureType": "road",
-      "elementType": "geometry",
-      "stylers": [{ "color": "#304a7d" }]
-    },
-    {
-      "featureType": "road",
-      "elementType": "labels.text.fill",
-      "stylers": [{ "color": "#98a5be" }]
-    },
-    {
-      "featureType": "road.highway",
-      "elementType": "geometry",
-      "stylers": [{ "color": "#2c6675" }]
-    },
-    {
-      "featureType": "road.highway",
-      "elementType": "labels.text.fill",
-      "stylers": [{ "color": "#b0d5ce" }]
-    },
-    {
-      "featureType": "transit",
-      "elementType": "geometry",
-      "stylers": [{ "color": "#2f3948" }]
-    },
-    {
-      "featureType": "transit.station",
-      "elementType": "labels.text.fill",
-      "stylers": [{ "color": "#d59563" }]
-    },
-    {
-      "featureType": "water",
-      "elementType": "geometry",
-      "stylers": [{ "color": "#17263c" }]
-    },
-    {
-      "featureType": "water",
-      "elementType": "labels.text.fill",
-      "stylers": [{ "color": "#515c6d" }]
-    },
-    {
-      "featureType": "water",
-      "elementType": "labels.text.stroke",
-      "stylers": [{ "color": "#17263c" }]
-    }
-  ]
-});
+        center,
+        zoom: 12,
+        streetViewControl: false,
+        mapTypeControl: false,
+        styles: [
+          { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+          { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+          { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+          { featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+          { featureType: 'poi', elementType: 'geometry', stylers: [{ visibility: 'off' }] },
+          { featureType: 'water', stylers: [{ color: '#2f3b52' }] },
+          { featureType: 'landscape', stylers: [{ color: '#3d3d3d' }] },
+          { elementType: 'labels.text.stroke', stylers: [{ color: '#1a3646' }] },
+          { elementType: 'labels.text.fill', stylers: [{ color: '#ffffff' }] }
+        ]
+      });
 
       const [bairros, alertas] = await Promise.all([
         fetchJson(BAIRROS_URL),
