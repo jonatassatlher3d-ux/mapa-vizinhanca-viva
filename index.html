@@ -306,15 +306,18 @@
         const descricao = a.Descricao || '';
         const confirms = a.Confirmacoes || 0;
 
-        const marker = new google.maps.Marker({
-          position,
-          map,
-          title: titulo,
-          icon: {
-            url: iconMap[tipo] || null,
-            scaledSize: new google.maps.Size(32, 32)
-          }
-        });
+        const iconUrl = iconMap[tipo];
+console.log('Alerta tipo:', tipo, 'URL ícone:', iconUrl);
+
+const marker = new google.maps.Marker({
+  position,
+  map,
+  title: titulo,
+  icon: iconUrl ? {
+    url: iconUrl,
+    scaledSize: new google.maps.Size(32, 32)
+  } : undefined
+});
 
         const infoContent = `
           <div class="info-window">
@@ -341,5 +344,6 @@
   </script>
 </body>
 </html>
+
 
 
