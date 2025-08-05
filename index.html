@@ -306,18 +306,20 @@
         const descricao = a.Descricao || '';
         const confirms = a.Confirmacoes || 0;
 
-        const iconUrl = iconMap[tipo];
-console.log('Alerta tipo:', tipo, 'URL ícone:', iconUrl);
+        const iconUrl = iconMap[tipo] || 'https://cdn-icons-png.flaticon.com/512/565/565547.png'; // ícone padrão
+console.log("Alerta tipo:", tipo, "URL ícone:", iconUrl);
 
-const marker = new google.maps.Marker({
+
+        const marker = new google.maps.Marker({
   position,
   map,
   title: titulo,
-  icon: iconUrl ? {
+  icon: {
     url: iconUrl,
     scaledSize: new google.maps.Size(32, 32)
-  } : undefined
+  }
 });
+
 
         const infoContent = `
           <div class="info-window">
@@ -344,6 +346,7 @@ const marker = new google.maps.Marker({
   </script>
 </body>
 </html>
+
 
 
 
