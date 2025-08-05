@@ -82,18 +82,17 @@
         const position = { lat: parts[0], lng: parts[1] };
         const reputacao = parseFloat(r.ReputacaoComp || 0);
         const reputacaoLabel = reputacao.toFixed(2);
-const iconUrl = iconMap[tipo] || iconMap.default;
+        const iconUrl = getIconUrlByReputacao(reputacao);
 
-const marker = new google.maps.Marker({
-  position,
-  map,
-  title: titulo,
-  icon: {
-    url: iconUrl,
-    scaledSize: new google.maps.Size(32, 32)
-  }
-});
-
+        const marker = new google.maps.Marker({
+          position,
+          map,
+          title: `${r.Nome} — Reputação: ${reputacaoLabel}`,
+          icon: {
+            url: iconUrl,
+            scaledSize: new google.maps.Size(32, 32)
+          }
+        });
 
         const resumo = (typeof r.Resumo_IA === 'string') ? r.Resumo_IA : '';
         const truncated = resumo.length > 200 ? resumo.slice(0, 200) + '...' : resumo;
@@ -174,6 +173,4 @@ const marker = new google.maps.Marker({
   </script>
 </body>
 </html>
-
-
 
