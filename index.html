@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Mapa Vizinhaça Viva</title>
+  <title>Mapa Vizinhança Viva</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body, html { margin:0; padding:0; height:100%; }
@@ -13,7 +13,6 @@
     .small { font-size:12px; color:#555; }
     a { color: #1a73e8; text-decoration:none; }
   </style>
-  <!-- Versão estável da API com callback para initMap -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
 </head>
 <body>
@@ -33,24 +32,12 @@
       }
     }
 
-    function createCircleIcon(color) {
-      return {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 10,
-        fillColor: color || '#777',
-        fillOpacity: 0.9,
-        strokeWeight: 1,
-        strokeColor: '#222'
-      };
-    }
-
-    // chamada automaticamente pela API via callback
     async function initMap() {
       const urlParams = new URLSearchParams(window.location.search);
       const latParam = parseFloat(urlParams.get('lat'));
       const lngParam = parseFloat(urlParams.get('lng'));
 
-      const defaultCenter = { lat: -19.82, lng: -40.27 }; // Aracruz fallback
+      const defaultCenter = { lat: -19.82, lng: -40.27 }; // Aracruz
       const center = (!isNaN(latParam) && !isNaN(lngParam)) ? { lat: latParam, lng: lngParam } : defaultCenter;
 
       const map = new google.maps.Map(document.getElementById('map'), {
@@ -65,8 +52,10 @@
         fetchJson(ALERTAS_URL)
       ]);
 
-      // Marcadores de ruas
+      // 🟢 Marcadores de ruas (com ícone PNG e log para debug)
       ruas.forEach(r => {
+        console.log('Rua:', r.Nome, 'Central_Point:', r.Central_Point); // log de debug
+
         if (!r.Central_Point) return;
         const parts = r.Central_Point.split(',').map(s => parseFloat(s.trim()));
         if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
@@ -74,15 +63,16 @@
         const position = { lat: parts[0], lng: parts[1] };
         const reputacao = parseFloat(r.ReputacaoComp || 0).toFixed(2);
         const cor = r.Cor_Reputacao || '#888';
+        const iconUrl = `https://via.placeholder.com/32/${cor.replace('#','')}/ffffff.png?text=+`;
 
         const marker = new google.maps.Marker({
           position,
           map,
           title: `${r.Nome} — Reputação: ${reputacao}`,
           icon: {
-  url: `https://via.placeholder.com/32/${cor.replace('#','')}/ffffff.png?text=+`,
-  scaledSize: new google.maps.Size(32, 32)
-}
+            url: iconUrl,
+            scaledSize: new google.maps.Size(32, 32)
+          }
         });
 
         const resumo = (typeof r.Resumo_IA === 'string') ? r.Resumo_IA : '';
@@ -94,7 +84,7 @@
             <div class="title">${r.Nome || 'Rua sem nome'}</div>
             <div class="small">${truncated}</div>
             <div style="margin-top:6px;">
-              <a href="#" onclick="openGlideDetail('${(r.DeepLink||'')}')">Ver no app</a>
+              <a href="#" onclick="openGlideDetail('${(r.DeepLink || '')}')">Ver no app</a>
             </div>
           </div>
         `;
@@ -102,7 +92,7 @@
         marker.addListener('click', () => infowindow.open({ map, anchor: marker }));
       });
 
-      // Ícones de alerta
+      // 🔶 Marcadores de alertas temporários
       const iconMap = {
         'Buraco': 'https://images.emojiterra.com/google/noto-emoji/unicode-16.0/color/1024px/1f573.png',
         'Entulho': 'https://w7.pngwing.com/pngs/241/366/png-transparent-rubbish-bins-waste-paper-baskets-emoji-sticker-emoji-glass-waste-containment-waste.png',
@@ -116,8 +106,8 @@
         if (!a.Localizacao) return;
         const parts = a.Localizacao.split(',').map(s => parseFloat(s.trim()));
         if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
-        const position = { lat: parts[0], lng: parts[1] };
 
+        const position = { lat: parts[0], lng: parts[1] };
         const tipo = a.Tipo_Alerta || 'Alerta';
         const titulo = a.Titulo_Alerta || tipo;
         const status = a.Status || '';
@@ -155,14 +145,12 @@
 
       if (linkOrFragment.startsWith('http')) {
         window.open(linkOrFragment, '_blank');
-        return;
+      } else {
+        const base = 'https://vizinhancaviva.glide.page';
+        const fullUrl = linkOrFragment.startsWith('#') ? `${base}/${linkOrFragment}` : `${base}/${linkOrFragment}`;
+        window.open(fullUrl, '_blank');
       }
-
-      const base = 'https://vizinhancaviva.glide.page';
-      const fullUrl = linkOrFragment.startsWith('#') ? `${base}/${linkOrFragment}` : `${base}/${linkOrFragment}`;
-      window.open(fullUrl, '_blank');
     }
   </script>
 </body>
 </html>
-
