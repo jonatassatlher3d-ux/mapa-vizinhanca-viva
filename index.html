@@ -264,6 +264,25 @@
           map: map
         });
 
+        // Calcular centro aproximado
+        let latSum = 0, lngSum = 0;
+coordPairs.forEach(coord => {
+  latSum += coord.lat;
+  lngSum += coord.lng;
+});
+        const centerLat = latSum / coordPairs.length;
+        const centerLng = lngSum / coordPairs.length;
+        const center = { lat: centerLat, lng: centerLng };
+
+// Adicionar InfoWindow com o nome do bairro
+        const nomeLabel = new google.maps.InfoWindow({
+  content: `<div style="color:white;font-weight:bold;text-shadow:1px 1px 2px black;">${b.Nome || 'Bairro'}</div>`,
+  position: center,
+  pixelOffset: new google.maps.Size(0, -10)
+});
+nomeLabel.open(map);
+
+
         const resumo = (typeof b.Resumo_IA === 'string') ? b.Resumo_IA : '';
         const truncated = resumo.length > 200 ? resumo.slice(0, 200) + '...' : resumo;
 
@@ -346,6 +365,7 @@ console.log("Alerta tipo:", tipo, "URL ícone:", iconUrl);
   </script>
 </body>
 </html>
+
 
 
 
