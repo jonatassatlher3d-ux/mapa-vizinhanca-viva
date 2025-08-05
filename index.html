@@ -63,7 +63,7 @@
         const position = { lat: parts[0], lng: parts[1] };
         const reputacao = parseFloat(r.ReputacaoComp || 0).toFixed(2);
         const cor = r.Cor_Reputacao || '#888';
-        const iconUrl = `https://via.placeholder.com/32/${cor.replace('#','')}/ffffff.png?text=+`;
+        const iconUrl = `https://placehold.co/32x32/${cor.replace('#','')}/ffffff.png?text=+`;
 
         const marker = new google.maps.Marker({
           position,
@@ -154,3 +154,4 @@
   </script>
 </body>
 </html>
+
