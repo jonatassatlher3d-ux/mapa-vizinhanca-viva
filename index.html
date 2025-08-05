@@ -22,23 +22,6 @@
     const BAIRROS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=Bairros';
     const ALERTAS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=AlertasTemporarios';
 
-    const icons = {
-      verde:   'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
-      azul:    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
-      amarelo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
-      laranja: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
-      vermelho:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10'
-    };
-
-    function getIconUrlByReputacao(rep) {
-      if (isNaN(rep)) return icons.vermelho;
-      if (rep >= 4.5) return icons.verde;
-      if (rep >= 3.5) return icons.azul;
-      if (rep >= 2.5) return icons.amarelo;
-      if (rep >= 1.5) return icons.laranja;
-      return icons.vermelho;
-    }
-
     async function fetchJson(url) {
       const res = await fetch(url);
       const text = await res.text();
@@ -47,6 +30,15 @@
       } catch (e) {
         return JSON.parse(JSON.parse(text));
       }
+    }
+
+    function getCorByReputacao(rep) {
+      if (isNaN(rep)) return '#ff0000';
+      if (rep >= 4.5) return '#4caf50'; // verde
+      if (rep >= 3.5) return '#2196f3'; // azul
+      if (rep >= 2.5) return '#ffeb3b'; // amarelo
+      if (rep >= 1.5) return '#ff9800'; // laranja
+      return '#f44336'; // vermelho
     }
 
     async function initMap() {
@@ -81,21 +73,28 @@
       ]);
 
       bairros.forEach(b => {
-        const central = b.Central_Point || b["Central Point"] || b.Coordenadas || '';
-        if (!central) return;
-        const parts = central.split(',').map(s => parseFloat(s.trim()));
-        if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
+        const coordsText = b.Poligono || '';
+        if (!coordsText) return;
 
-        const position = { lat: parts[0], lng: parts[1] };
+        const coordPairs = coordsText.split(';').map(pair => {
+          const [lat, lng] = pair.trim().split(',').map(Number);
+          return { lat, lng };
+        }).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+
+        if (coordPairs.length < 3) return;
+
         const reputacao = parseFloat(b.ReputacaoComp || 0);
+        const cor = getCorByReputacao(reputacao);
         const reputacaoLabel = reputacao.toFixed(2);
-        const iconUrl = getIconUrlByReputacao(reputacao);
 
-        const marker = new google.maps.Marker({
-          position,
-          map,
-          title: `${b.Nome} — Reputação: ${reputacaoLabel}`,
-          icon: { url: iconUrl, scaledSize: new google.maps.Size(32, 32) }
+        const poligono = new google.maps.Polygon({
+          paths: coordPairs,
+          strokeColor: cor,
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: cor,
+          fillOpacity: 0.5,
+          map: map
         });
 
         const resumo = (typeof b.Resumo_IA === 'string') ? b.Resumo_IA : '';
@@ -103,7 +102,7 @@
 
         const infoContent = `
           <div class="info-window">
-            <div class="badge" style="background:#333;">Reputação: ${reputacaoLabel}</div>
+            <div class="badge" style="background:${cor};">Reputação: ${reputacaoLabel}</div>
             <div class="title">${b.Nome || 'Bairro sem nome'}</div>
             <div class="small">${truncated}</div>
             <div style="margin-top:6px;">
@@ -112,7 +111,11 @@
           </div>
         `;
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
-        marker.addListener('click', () => infowindow.open({ map, anchor: marker }));
+
+        poligono.addListener('click', (e) => {
+          infowindow.setPosition(e.latLng);
+          infowindow.open(map);
+        });
       });
 
       const iconMap = {
