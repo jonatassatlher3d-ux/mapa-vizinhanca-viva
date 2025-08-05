@@ -162,19 +162,19 @@
       });
     }
 
+    // ✅ Agora abre na mesma aba/página
     function openGlideDetail(linkOrFragment) {
       if (!linkOrFragment) {
         alert('Link da rua não disponível');
         return;
       }
 
-      if (linkOrFragment.startsWith('http')) {
-        window.open(linkOrFragment, '_blank');
-      } else {
-        const base = 'https://vizinhancaviva.glide.page';
-        const fullUrl = `${base}/${linkOrFragment}`;
-        window.open(fullUrl, '_blank');
-      }
+      const base = 'https://vizinhancaviva.glide.page';
+      const fullUrl = linkOrFragment.startsWith('http')
+        ? linkOrFragment
+        : `${base}/${linkOrFragment}`;
+
+      window.location.href = fullUrl; // ✅ Redireciona na mesma tela
     }
   </script>
 </body>
