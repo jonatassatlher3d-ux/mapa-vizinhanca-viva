@@ -54,43 +54,44 @@
 
       // 🟢 Marcadores de ruas (com ícone PNG e log para debug)
       ruas.forEach(r => {
-        console.log('Rua:', r.Nome, 'Central_Point:', r.Central_Point); // log de debug
+  const central = r.Central_Point || r["Central Point"] || r.Coordenadas || '';
+  console.log('Rua:', r.Nome, 'Central_Point:', central);
 
-        if (!r.Central_Point) return;
-        const parts = r.Central_Point.split(',').map(s => parseFloat(s.trim()));
-        if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
+  if (!central) return;
+  const parts = central.split(',').map(s => parseFloat(s.trim()));
+  if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
 
-        const position = { lat: parts[0], lng: parts[1] };
-        const reputacao = parseFloat(r.ReputacaoComp || 0).toFixed(2);
-        const cor = r.Cor_Reputacao || '#888';
-        const iconUrl = `https://placehold.co/32x32/${cor.replace('#','')}/ffffff.png?text=+`;
+  const position = { lat: parts[0], lng: parts[1] };
+  const reputacao = parseFloat(r.ReputacaoComp || 0).toFixed(2);
+  const cor = r.Cor_Reputacao || '#888';
+  const iconUrl = `https://placehold.co/32x32/${cor.replace('#','')}/ffffff.png?text=+`;
 
-        const marker = new google.maps.Marker({
-          position,
-          map,
-          title: `${r.Nome} — Reputação: ${reputacao}`,
-          icon: {
-            url: iconUrl,
-            scaledSize: new google.maps.Size(32, 32)
-          }
-        });
+  const marker = new google.maps.Marker({
+    position,
+    map,
+    title: `${r.Nome} — Reputação: ${reputacao}`,
+    icon: {
+      url: iconUrl,
+      scaledSize: new google.maps.Size(32, 32)
+    }
+  });
 
-        const resumo = (typeof r.Resumo_IA === 'string') ? r.Resumo_IA : '';
-        const truncated = resumo.length > 200 ? resumo.slice(0, 200) + '...' : resumo;
+  const resumo = (typeof r.Resumo_IA === 'string') ? r.Resumo_IA : '';
+  const truncated = resumo.length > 200 ? resumo.slice(0, 200) + '...' : resumo;
 
-        const infoContent = `
-          <div class="info-window">
-            <div class="badge" style="background:${cor};">Reputação: ${reputacao}</div>
-            <div class="title">${r.Nome || 'Rua sem nome'}</div>
-            <div class="small">${truncated}</div>
-            <div style="margin-top:6px;">
-              <a href="#" onclick="openGlideDetail('${(r.DeepLink || '')}')">Ver no app</a>
-            </div>
-          </div>
-        `;
-        const infowindow = new google.maps.InfoWindow({ content: infoContent });
-        marker.addListener('click', () => infowindow.open({ map, anchor: marker }));
-      });
+  const infoContent = `
+    <div class="info-window">
+      <div class="badge" style="background:${cor};">Reputação: ${reputacao}</div>
+      <div class="title">${r.Nome || 'Rua sem nome'}</div>
+      <div class="small">${truncated}</div>
+      <div style="margin-top:6px;">
+        <a href="#" onclick="openGlideDetail('${(r.DeepLink || '')}')">Ver no app</a>
+      </div>
+    </div>
+  `;
+  const infowindow = new google.maps.InfoWindow({ content: infoContent });
+  marker.addListener('click', () => infowindow.open({ map, anchor: marker }));
+});
 
       // 🔶 Marcadores de alertas temporários
       const iconMap = {
@@ -154,4 +155,5 @@
   </script>
 </body>
 </html>
+
 
