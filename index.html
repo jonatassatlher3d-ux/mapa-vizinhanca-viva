@@ -22,23 +22,22 @@
     const RUAS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=Ruas';
     const ALERTAS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=AlertasTemporarios';
 
-    // Ícones de reputação hospedados no GitHub
     const icons = {
-  verde:   'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
-  azul:    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
-  amarelo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
-  laranja: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
-  vermelho:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10'
-};
+      verde:   'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
+      azul:    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
+      amarelo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
+      laranja: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10',
+      vermelho:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSu3glLJBmG6pzaXGkwcmu341VHQjQoTnvqkSRPnJPG5WOLbdw43D3QHAg&s=10'
+    };
 
     function getIconUrlByReputacao(reputacao) {
-  if (isNaN(reputacao)) return icons.vermelho; // fallback
-  if (reputacao >= 4.5) return icons.verde;
-  if (reputacao >= 3.5) return icons.azul;
-  if (reputacao >= 2.5) return icons.amarelo;
-  if (reputacao >= 1.5) return icons.laranja;
-  return icons.vermelho;
-}
+      if (isNaN(reputacao)) return icons.vermelho;
+      if (reputacao >= 4.5) return icons.verde;
+      if (reputacao >= 3.5) return icons.azul;
+      if (reputacao >= 2.5) return icons.amarelo;
+      if (reputacao >= 1.5) return icons.laranja;
+      return icons.vermelho;
+    }
 
     async function fetchJson(url) {
       const res = await fetch(url);
@@ -118,7 +117,8 @@
         'Queimada': 'https://e7.pngegg.com/pngimages/358/307/png-clipart-fire-illustration-emoji-fire-flame-heater-repairman-leaf-orange-thumbnail.png',
         'Foco de mosquito': 'https://api.hub.jhu.edu/factory/sites/default/files/styles/hub_medium/public/mosquito_emoji120318_0.jpg',
         'Obstrução': 'https://cdn-icons-png.flaticon.com/512/2228/2228942.png',
-        'Ameaça animal': 'https://em-content.zobj.net/source/apple/81/snake_1f40d.png'
+        'Ameaça animal': 'https://em-content.zobj.net/source/apple/81/snake_1f40d.png',
+        'default': 'https://cdn-icons-png.flaticon.com/512/565/565547.png'
       };
 
       alertas.forEach(a => {
@@ -133,12 +133,18 @@
         const descricao = a.Descricao || '';
         const confirms = a.Confirmacoes || 0;
 
+        if (!iconMap[tipo]) {
+          console.warn(`Tipo de alerta não reconhecido: ${tipo}, usando ícone padrão.`);
+        }
+
+        const iconUrl = iconMap[tipo] || iconMap.default;
+
         const marker = new google.maps.Marker({
           position,
           map,
           title: titulo,
           icon: {
-            url: iconMap[tipo] || null,
+            url: iconUrl,
             scaledSize: new google.maps.Size(32, 32)
           }
         });
@@ -173,4 +179,3 @@
   </script>
 </body>
 </html>
-
