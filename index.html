@@ -10,8 +10,8 @@
     .info-window { font-family: Arial, sans-serif; font-size: 14px; max-width: 260px; }
     .badge { padding: 4px 8px; border-radius: 4px; color: #fff; display: inline-block; margin-bottom: 6px; font-weight: 600; }
     .title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .small { font-size: 12px; color: #555; }
-    a { color: #1a73e8; text-decoration: none; }
+    .small { font-size: 12px; color: #ccc; }
+    a { color: #4ea1ff; text-decoration: none; }
   </style>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
 </head>
@@ -62,6 +62,19 @@
         zoom: 13,
         streetViewControl: false,
         mapTypeControl: false,
+        styles: [
+          { elementType: 'geometry', stylers: [{ color: '#212121' }] },
+          { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+          { elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+          { elementType: 'labels.text.stroke', stylers: [{ color: '#212121' }] },
+          { featureType: 'administrative', elementType: 'geometry', stylers: [{ visibility: 'off' }] },
+          { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#383838' }] },
+          { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+          { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] },
+          { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#3d3d3d' }] }
+        ]
       });
 
       const [ruas, alertas] = await Promise.all([
@@ -69,10 +82,8 @@
         fetchJson(ALERTAS_URL)
       ]);
 
-      // RUAS
       ruas.forEach(r => {
         const central = r.Central_Point || r["Central Point"] || r.Coordenadas || '';
-        console.log('Rua:', r.Nome, 'Central_Point:', central);
         if (!central) return;
 
         const parts = central.split(',').map(s => parseFloat(s.trim()));
@@ -98,7 +109,7 @@
 
         const infoContent = `
           <div class="info-window">
-            <div class="badge" style="background:#333;">Reputação: ${reputacaoLabel}</div>
+            <div class="badge" style="background:#444;">Reputação: ${reputacaoLabel}</div>
             <div class="title">${r.Nome || 'Rua sem nome'}</div>
             <div class="small">${truncated}</div>
             <div style="margin-top:6px;">
@@ -110,7 +121,6 @@
         marker.addListener('click', () => infowindow.open({ map, anchor: marker }));
       });
 
-      // ALERTAS TEMPORÁRIOS
       const iconMap = {
         'Buraco': 'https://images.emojiterra.com/google/noto-emoji/unicode-16.0/color/1024px/1f573.png',
         'Entulho': 'https://w7.pngwing.com/pngs/241/366/png-transparent-rubbish-bins-waste-paper-baskets-emoji-sticker-emoji-glass-waste-containment-waste.png',
@@ -132,10 +142,6 @@
         const status = a.Status || '';
         const descricao = a.Descricao || '';
         const confirms = a.Confirmacoes || 0;
-
-        if (!iconMap[tipo]) {
-          console.warn(`Tipo de alerta não reconhecido: ${tipo}, usando ícone padrão.`);
-        }
 
         const iconUrl = iconMap[tipo] || iconMap.default;
 
@@ -162,7 +168,6 @@
       });
     }
 
-    // ✅ Agora abre na mesma aba/página
     function openGlideDetail(linkOrFragment) {
       if (!linkOrFragment) {
         alert('Link da rua não disponível');
@@ -170,11 +175,8 @@
       }
 
       const base = 'https://vizinhancaviva.glide.page';
-      const fullUrl = linkOrFragment.startsWith('http')
-        ? linkOrFragment
-        : `${base}/${linkOrFragment}`;
-
-      window.location.href = fullUrl; // ✅ Redireciona na mesma tela
+      const fullUrl = linkOrFragment.startsWith('http') ? linkOrFragment : `${base}/${linkOrFragment}`;
+      window.location.href = fullUrl; // Abre na mesma aba (Glide)
     }
   </script>
 </body>
