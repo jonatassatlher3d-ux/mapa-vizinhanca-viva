@@ -43,7 +43,7 @@
       }
       const base = 'https://vizinhancaviva.glide.page';
       const fullUrl = linkOrFragment.startsWith('http') ? linkOrFragment : `${base}/${linkOrFragment}`;
-      window.location.href = fullUrl;
+      window.top.location.href = fullUrl;
     }
 
     async function initMap() {
@@ -168,4 +168,5 @@
   </script>
 </body>
 </html>
+
 
