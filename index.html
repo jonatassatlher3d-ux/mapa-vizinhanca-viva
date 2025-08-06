@@ -12,32 +12,31 @@
       overflow: hidden;
     }
     #container {
-  position: relative;
-  height: 100%;
-  width: 100%;
-}
+      position: relative;
+      height: 100%;
+      width: 100%;
+    }
     #map {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
     #painel {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 300px;
-  height: 100%;
-  background: #1e1e1e;
-  color: #fff;
-  padding: 20px;
-  overflow-y: auto;
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-  z-index: 2;
-}
-
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 340px;
+      height: 100%;
+      background: #1e1e1e;
+      color: #fff;
+      padding: 20px;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 2;
+    }
     #painel.aberto {
       transform: translateX(0%);
     }
@@ -56,6 +55,30 @@
       color: gold;
       font-size: 16px;
     }
+    form label {
+      display: block;
+      margin-top: 10px;
+    }
+    form input[type="number"],
+    form textarea,
+    form select {
+      width: 100%;
+      padding: 5px;
+      margin-top: 5px;
+      background: #333;
+      border: none;
+      color: #fff;
+    }
+    form button {
+      margin-top: 15px;
+      padding: 10px;
+      width: 100%;
+      background: #4caf50;
+      border: none;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
   </style>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
 </head>
@@ -64,26 +87,49 @@
     <div id="map"></div>
     <div id="painel">
       <h2 id="nome-bairro">Selecione um bairro</h2>
-      <p id="descricao-bairro"></p>
-      <p><strong>Reputação geral:</strong> <span id="media-geral"></span></p>
-      <div id="notas-categorias"></div>
-      <h3>Comentários recentes</h3>
+      <p id="descricao-bairro">Descrição do bairro aqui.</p>
+
+      <p><strong>Segurança:</strong> <span id="seguranca"></span> ⭐</p>
+      <p><strong>Ruído:</strong> <span id="ruido"></span> ⭐</p>
+      <p><strong>Limpeza:</strong> <span id="limpeza"></span> ⭐</p>
+      <p><strong>Tranquilidade:</strong> <span id="tranquilidade"></span> ⭐</p>
+      <p><strong>Ideal para crianças:</strong> <span id="criancas"></span> ⭐</p>
+      <p><strong>Ótimos vizinhos:</strong> <span id="vizinhos"></span> ⭐</p>
+
+      <p><strong>Média geral:</strong> <span id="media-geral"></span> ⭐</p>
+
+      <h3>Comentários</h3>
       <ul id="comentarios"></ul>
-      <h3>Nova avaliação</h3>
+
+      <h3>Avalie este bairro</h3>
       <form id="form-avaliacao">
-        <label>Tipo de usuário:</label><br>
+        <label>Morador / Visitante</label>
         <select name="tipo">
           <option value="morador">Morador</option>
           <option value="visitante">Visitante</option>
-        </select><br><br>
-        <label>Limpeza:</label><br>
-        <input type="number" name="limpeza" min="1" max="5"><br>
-        <label>Segurança:</label><br>
-        <input type="number" name="seguranca" min="1" max="5"><br>
-        <label>Barulho:</label><br>
-        <input type="number" name="barulho" min="1" max="5"><br>
-        <label>Comentário:</label><br>
-        <textarea name="comentario" rows="3"></textarea><br><br>
+        </select>
+
+        <label>Segurança</label>
+        <input type="number" name="seguranca" min="1" max="5">
+
+        <label>Ruído</label>
+        <input type="number" name="ruido" min="1" max="5">
+
+        <label>Limpeza</label>
+        <input type="number" name="limpeza" min="1" max="5">
+
+        <label>Tranquilidade</label>
+        <input type="number" name="tranquilidade" min="1" max="5">
+
+        <label>Ideal para crianças</label>
+        <input type="number" name="criancas" min="1" max="5">
+
+        <label>Ótimos vizinhos</label>
+        <input type="number" name="vizinhos" min="1" max="5">
+
+        <label>Deixe seu comentário</label>
+        <textarea name="comentario" rows="3"></textarea>
+
         <button type="submit">Enviar</button>
       </form>
     </div>
@@ -106,14 +152,13 @@
       const text = await res.text();
       try {
         return JSON.parse(text);
-      } catch (e) {
+      } catch {
         return JSON.parse(JSON.parse(text));
       }
     }
 
     let map;
-
-    function initMap() {
+    window.initMap = function () {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           position => {
@@ -141,21 +186,18 @@
         zoom,
         streetViewControl: false,
         mapTypeControl: false,
-        gestureHandling: 'greedy', // <--- permite scroll sem Ctrl
+        gestureHandling: 'greedy',
         styles: [
           { elementType: "geometry", stylers: [{ color: "#212121" }] },
           { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
           { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
           { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
-          { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
-          { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#181818" }] },
           { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2c2c2c" }] },
           { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
           { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] }
         ]
       });
 
-      // Ocultar painel ao clicar fora de qualquer polígono
       map.addListener('click', () => {
         document.getElementById("painel").classList.remove("aberto");
       });
@@ -174,15 +216,10 @@
           const [lat, lng] = pair.trim().split(',').map(Number);
           return { lat, lng };
         }).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
-
         if (coordPairs.length < 3) return;
 
         const reputacao = parseFloat(b.ReputacaoComp);
         const cor = getCorByReputacao(reputacao);
-        const nome = b.Nome || 'Bairro';
-        const descricao = b.Resumo_IA || 'Sem descrição';
-        const comentarios = (b.Comentarios || '').split('|').filter(c => c);
-        const categorias = ['Limpeza', 'Segurança', 'Barulho'];
 
         const poligono = new google.maps.Polygon({
           paths: coordPairs,
@@ -194,34 +231,8 @@
           map: map
         });
 
-        poligono.addListener('click', (event) => {
-          event.stop(); // impede que o clique propague
-          const painel = document.getElementById("painel");
-          painel.classList.add("aberto");
-
-          document.getElementById("nome-bairro").innerText = nome;
-          document.getElementById("descricao-bairro").innerText = descricao;
-          document.getElementById("media-geral").innerText = isNaN(reputacao) ? '0.0 ⭐' : `${reputacao.toFixed(1)} ⭐`;
-
-          const notasDiv = document.getElementById("notas-categorias");
-          notasDiv.innerHTML = '';
-          categorias.forEach(cat => {
-            const nota = b[cat] || '0';
-            notasDiv.innerHTML += `<p><strong>${cat}:</strong> ${nota} ⭐</p>`;
-          });
-
-          const lista = document.getElementById("comentarios");
-          lista.innerHTML = '';
-          comentarios.slice(0, 5).forEach(c => {
-            const li = document.createElement('li');
-            li.textContent = c;
-            lista.appendChild(li);
-          });
-        });
-
-        // Label central do bairro
         const centro = calcularCentroide(coordPairs);
-        const texto = `${nome} (${isNaN(reputacao) ? '0.0' : reputacao.toFixed(1)}⭐)`;
+        const texto = `${b.Nome} (${isNaN(reputacao) ? '0.0' : reputacao.toFixed(1)}⭐)`;
         const div = document.createElement('div');
         div.className = 'map-label';
         div.textContent = texto;
@@ -237,6 +248,31 @@
           div.style.top = pos.y + 'px';
         };
         label.setMap(map);
+
+        poligono.addListener('click', (event) => {
+          event.stop();
+          const painel = document.getElementById("painel");
+          painel.classList.add("aberto");
+
+          document.getElementById("nome-bairro").innerText = b.Nome;
+          document.getElementById("descricao-bairro").innerText = b.Resumo_IA || "Sem descrição";
+
+          document.getElementById("seguranca").innerText = b.Segurança || '0';
+          document.getElementById("ruido").innerText = b.Ruído || '0';
+          document.getElementById("limpeza").innerText = b.Limpeza || '0';
+          document.getElementById("tranquilidade").innerText = b.Tranquilidade || '0';
+          document.getElementById("criancas").innerText = b["Ideal para crianças"] || '0';
+          document.getElementById("vizinhos").innerText = b["Ótimos vizinhos"] || '0';
+          document.getElementById("media-geral").innerText = isNaN(reputacao) ? '0.0' : reputacao.toFixed(1);
+
+          const lista = document.getElementById("comentarios");
+          lista.innerHTML = '';
+          (b.Comentarios || '').split('|').forEach(c => {
+            const li = document.createElement('li');
+            li.textContent = c;
+            lista.appendChild(li);
+          });
+        });
       });
     }
 
@@ -251,4 +287,3 @@
   </script>
 </body>
 </html>
-
