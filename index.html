@@ -5,9 +5,26 @@
   <title>Mapa Vizinhança Viva - Bairros</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; }
-    #map { height: 100%; width: 100%; }
-
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: Arial, sans-serif;
+    }
+    #map {
+      height: 100%;
+      width: calc(100% - 300px);
+      float: left;
+    }
+    #painel {
+      width: 300px;
+      height: 100%;
+      float: right;
+      background: #1e1e1e;
+      color: #fff;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      display: none;
+    }
     .map-label {
       position: absolute;
       background-color: transparent;
@@ -19,74 +36,46 @@
       transform: translate(-50%, -50%);
       text-shadow: 0 0 3px #000;
     }
-
-    .sidebar {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 300px;
-      height: 100%;
-      background-color: #111;
-      color: white;
-      overflow-y: auto;
-      padding: 20px;
-      z-index: 999;
-      transition: transform 0.3s ease-in-out;
-      transform: translateX(100%);
-    }
-
-    .sidebar.visible {
-      transform: translateX(0);
-    }
-
-    .sidebar.hidden {
-      transform: translateX(100%);
+    .estrela {
+      color: gold;
+      font-size: 16px;
     }
   </style>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=SUA_API_KEY&callback=initMap" async defer></script>
 </head>
 <body>
   <div id="map"></div>
-
-  <div id="sidebar" class="sidebar hidden">
-    <div id="sidebar-content">
-      <h2 id="bairro-nome">Nome do Bairro</h2>
-      <p id="bairro-descricao">Descrição breve do bairro...</p>
-
-      <div id="avaliacoes">
-        <h3>Notas por categoria</h3>
-        <ul id="notas-categorias"></ul>
-        <p><strong>Média Geral:</strong> <span id="media-geral">0.0</span> ⭐</p>
-      </div>
-
-      <div id="comentarios">
-        <h3>Comentários</h3>
-        <ul id="lista-comentarios"></ul>
-      </div>
-
-      <div id="formulario-avaliacao">
-        <h3>Avalie este bairro!</h3>
-        <form id="form-avaliar">
-          <label>Segurança: <input type="number" min="1" max="5" name="seguranca"></label><br>
-          <label>Ruído: <input type="number" min="1" max="5" name="ruido"></label><br>
-          <label>Limpeza: <input type="number" min="1" max="5" name="limpeza"></label><br>
-          <label>Tranquilidade: <input type="number" min="1" max="5" name="tranquilidade"></label><br>
-          <label>Ideal para crianças: <input type="number" min="1" max="5" name="criancas"></label><br>
-          <label>Ótimos vizinhos: <input type="number" min="1" max="5" name="vizinhos"></label><br>
-          <textarea name="comentario" maxlength="150" placeholder="Seu comentário..."></textarea><br>
-          <label><input type="radio" name="perfil" value="Morador"> Morador</label>
-          <label><input type="radio" name="perfil" value="Visitante"> Visitante</label><br>
-          <button type="submit">Enviar</button>
-        </form>
-      </div>
-    </div>
+  <div id="painel">
+    <h2 id="nome-bairro">Selecione um bairro</h2>
+    <p id="descricao-bairro"></p>
+    <p><strong>Reputação geral:</strong> <span id="media-geral"></span></p>
+    <div id="notas-categorias"></div>
+    <h3>Comentários recentes</h3>
+    <ul id="comentarios"></ul>
+    <h3>Nova avaliação</h3>
+    <form id="form-avaliacao">
+      <label>Tipo de usuário:</label><br>
+      <select name="tipo">
+        <option value="morador">Morador</option>
+        <option value="visitante">Visitante</option>
+      </select><br><br>
+      <label>Limpeza:</label><br>
+      <input type="number" name="limpeza" min="1" max="5"><br>
+      <label>Segurança:</label><br>
+      <input type="number" name="seguranca" min="1" max="5"><br>
+      <label>Barulho:</label><br>
+      <input type="number" name="barulho" min="1" max="5"><br>
+      <label>Comentário:</label><br>
+      <textarea name="comentario" rows="3"></textarea><br><br>
+      <button type="submit">Enviar</button>
+    </form>
   </div>
 
   <script>
     const BAIRROS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=Bairros';
 
     function getCorByReputacao(rep) {
-      if (isNaN(rep)) return '#ffffff';
+      if (isNaN(rep)) return '#ffffff'; // branco
       if (rep >= 4.5) return '#4caf50';
       if (rep >= 3.5) return '#2196f3';
       if (rep >= 2.5) return '#ffeb3b';
@@ -134,28 +123,25 @@
         zoom,
         streetViewControl: false,
         mapTypeControl: false,
-        styles: [
-          { "elementType": "geometry", "stylers": [{ "color": "#212121" }] },
-          { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
-          { "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
-          { "elementType": "labels.text.stroke", "stylers": [{ "color": "#212121" }] },
-          { "featureType": "administrative", "elementType": "geometry", "stylers": [{ "color": "#757575" }] },
-          { "featureType": "administrative.country", "elementType": "labels.text.fill", "stylers": [{ "color": "#9e9e9e" }] },
-          { "featureType": "administrative.locality", "elementType": "labels.text.fill", "stylers": [{ "color": "#bdbdbd" }] },
-          { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
-          { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#181818" }] },
-          { "featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{ "color": "#616161" }] },
-          { "featureType": "poi.park", "elementType": "labels.text.stroke", "stylers": [{ "color": "#1b1b1b" }] },
-          { "featureType": "road", "elementType": "geometry.fill", "stylers": [{ "color": "#2c2c2c" }] },
-          { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#8a8a8a" }] },
-          { "featureType": "road.arterial", "elementType": "geometry", "stylers": [{ "color": "#373737" }] },
-          { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#3c3c3c" }] },
-          { "featureType": "road.highway.controlled_access", "elementType": "geometry", "stylers": [{ "color": "#4e4e4e" }] },
-          { "featureType": "road.local", "elementType": "labels.text.fill", "stylers": [{ "color": "#616161" }] },
-          { "featureType": "transit", "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
-          { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#000000" }] },
-          { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#3d3d3d" }] }
+        styles: [ // dark theme
+          { elementType: "geometry", stylers: [{ color: "#212121" }] },
+          { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+          { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+          { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+          { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
+          { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
+          { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#bdbdbd" }] },
+          { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+          { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#181818" }] },
+          { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2c2c2c" }] },
+          { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
+          { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] }
         ]
+      });
+
+      // Ocultar painel ao clicar fora dos polígonos
+      map.addListener('click', () => {
+        document.getElementById("painel").style.display = "none";
       });
 
       carregarBairros();
@@ -178,7 +164,9 @@
         const reputacao = parseFloat(b.ReputacaoComp);
         const cor = getCorByReputacao(reputacao);
         const nome = b.Nome || 'Bairro';
-        const texto = `${nome} (${isNaN(reputacao) ? '0.0' : reputacao.toFixed(1)}⭐)`;
+        const descricao = b.Resumo_IA || 'Sem descrição';
+        const comentarios = (b.Comentarios || '').split('|').filter(c => c);
+        const categorias = ['Limpeza', 'Segurança', 'Barulho'];
 
         const poligono = new google.maps.Polygon({
           paths: coordPairs,
@@ -190,12 +178,32 @@
           map: map
         });
 
-        google.maps.event.addListener(poligono, 'click', () => {
-          abrirPainel(b);
+        poligono.addListener('click', (event) => {
+          document.getElementById("nome-bairro").innerText = nome;
+          document.getElementById("descricao-bairro").innerText = descricao;
+          document.getElementById("media-geral").innerText = isNaN(reputacao) ? '0.0 ⭐' : `${reputacao.toFixed(1)} ⭐`;
+
+          const notasDiv = document.getElementById("notas-categorias");
+          notasDiv.innerHTML = '';
+          categorias.forEach(cat => {
+            const nota = b[cat] || '0';
+            notasDiv.innerHTML += `<p><strong>${cat}:</strong> ${nota} ⭐</p>`;
+          });
+
+          const lista = document.getElementById("comentarios");
+          lista.innerHTML = '';
+          comentarios.slice(0, 5).forEach(c => {
+            const li = document.createElement('li');
+            li.textContent = c;
+            lista.appendChild(li);
+          });
+
+          document.getElementById("painel").style.display = "block";
         });
 
+        // Label no centro
         const centro = calcularCentroide(coordPairs);
-
+        const texto = `${nome} (${isNaN(reputacao) ? '0.0' : reputacao.toFixed(1)}⭐)`;
         const div = document.createElement('div');
         div.className = 'map-label';
         div.textContent = texto;
@@ -205,13 +213,10 @@
           this.getPanes().overlayLayer.appendChild(div);
         };
         label.draw = function () {
-          const projection = this.getProjection();
-          const pos = projection.fromLatLngToDivPixel(new google.maps.LatLng(centro.lat, centro.lng));
+          const proj = this.getProjection();
+          const pos = proj.fromLatLngToDivPixel(new google.maps.LatLng(centro.lat, centro.lng));
           div.style.left = pos.x + 'px';
           div.style.top = pos.y + 'px';
-        };
-        label.onRemove = function () {
-          div.parentNode.removeChild(div);
         };
         label.setMap(map);
       });
@@ -224,41 +229,6 @@
         lng += p.lng;
       });
       return { lat: lat / pontos.length, lng: lng / pontos.length };
-    }
-
-    function abrirPainel(bairro) {
-      document.getElementById('bairro-nome').textContent = bairro.Nome || 'Sem nome';
-      document.getElementById('bairro-descricao').textContent = bairro.Descricao || 'Sem descrição.';
-
-      const categorias = ['Seguranca', 'Ruido', 'Limpeza', 'Tranquilidade', 'Criancas', 'Vizinhos'];
-      const notasUl = document.getElementById('notas-categorias');
-      notasUl.innerHTML = '';
-
-      let soma = 0, count = 0;
-      categorias.forEach(cat => {
-        const nota = parseFloat(bairro[cat]);
-        if (!isNaN(nota)) {
-          const li = document.createElement('li');
-          li.textContent = `${cat}: ${nota.toFixed(1)}`;
-          notasUl.appendChild(li);
-          soma += nota;
-          count++;
-        }
-      });
-
-      document.getElementById('media-geral').textContent = count ? (soma / count).toFixed(2) : '0.0';
-
-      const listaComentarios = document.getElementById('lista-comentarios');
-      listaComentarios.innerHTML = '';
-      const comentarios = bairro.Comentarios ? bairro.Comentarios.split(';') : [];
-      comentarios.forEach(com => {
-        const li = document.createElement('li');
-        li.textContent = com;
-        listaComentarios.appendChild(li);
-      });
-
-      document.getElementById('sidebar').classList.remove('hidden');
-      document.getElementById('sidebar').classList.add('visible');
     }
   </script>
 </body>
