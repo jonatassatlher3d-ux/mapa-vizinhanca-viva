@@ -10,9 +10,10 @@
     .info-window { font-family: Arial, sans-serif; font-size: 14px; max-width: 260px; }
     .badge { padding: 4px 8px; border-radius: 4px; color: #fff; display: inline-block; margin-bottom: 6px; font-weight: 600; }
     .title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .small { font-size: 12px; color: #bbb; }
+    .small { font-size: 12px; color: #555; }
+    a { color: #1a73e8; text-decoration: none; }
   </style>
-  <script src="https://maps.googleapis.com/maps/api/js?key=SUA_API_KEY_AQUI&callback=initMap" async defer></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
 </head>
 <body>
   <div id="map"></div>
@@ -41,34 +42,39 @@
     }
 
     async function initMap() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const latParam = parseFloat(urlParams.get('lat'));
+      const lngParam = parseFloat(urlParams.get('lng'));
+
       const defaultCenter = { lat: -19.82, lng: -40.27 };
+      const center = (!isNaN(latParam) && !isNaN(lngParam)) ? { lat: latParam, lng: lngParam } : defaultCenter;
 
       const map = new google.maps.Map(document.getElementById('map'), {
-        center: defaultCenter,
+        center,
         zoom: 12,
         streetViewControl: false,
         mapTypeControl: false,
-        styles: [/* === DARK MODE STYLE AQUI === */{
-          "elementType": "geometry","stylers":[{"color":"#212121"}]},
-          {"elementType":"labels.icon","stylers":[{"visibility":"off"}]},
-          {"elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
-          {"elementType":"labels.text.stroke","stylers":[{"color":"#212121"}]},
-          {"featureType":"administrative","elementType":"geometry","stylers":[{"color":"#757575"}]},
-          {"featureType":"administrative.country","elementType":"labels.text.fill","stylers":[{"color":"#9e9e9e"}]},
-          {"featureType":"administrative.locality","elementType":"labels.text.fill","stylers":[{"color":"#bdbdbd"}]},
-          {"featureType":"poi","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
-          {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#181818"}]},
-          {"featureType":"poi.park","elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},
-          {"featureType":"poi.park","elementType":"labels.text.stroke","stylers":[{"color":"#1b1b1b"}]},
-          {"featureType":"road","elementType":"geometry.fill","stylers":[{"color":"#2c2c2c"}]},
-          {"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#8a8a8a"}]},
-          {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#373737"}]},
-          {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#3c3c3c"}]},
-          {"featureType":"road.highway.controlled_access","elementType":"geometry","stylers":[{"color":"#4e4e4e"}]},
-          {"featureType":"road.local","elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},
-          {"featureType":"transit","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
-          {"featureType":"water","elementType":"geometry","stylers":[{"color":"#000000"}]},
-          {"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#3d3d3d"}]}
+        styles: [ /* estilo dark completo */ 
+          { "elementType": "geometry", "stylers": [{ "color": "#212121" }] },
+          { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
+          { "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
+          { "elementType": "labels.text.stroke", "stylers": [{ "color": "#212121" }] },
+          { "featureType": "administrative", "elementType": "geometry", "stylers": [{ "color": "#757575" }] },
+          { "featureType": "administrative.country", "elementType": "labels.text.fill", "stylers": [{ "color": "#9e9e9e" }] },
+          { "featureType": "administrative.locality", "elementType": "labels.text.fill", "stylers": [{ "color": "#bdbdbd" }] },
+          { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
+          { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#181818" }] },
+          { "featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{ "color": "#616161" }] },
+          { "featureType": "poi.park", "elementType": "labels.text.stroke", "stylers": [{ "color": "#1b1b1b" }] },
+          { "featureType": "road", "elementType": "geometry.fill", "stylers": [{ "color": "#2c2c2c" }] },
+          { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#8a8a8a" }] },
+          { "featureType": "road.arterial", "elementType": "geometry", "stylers": [{ "color": "#373737" }] },
+          { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#3c3c3c" }] },
+          { "featureType": "road.highway.controlled_access", "elementType": "geometry", "stylers": [{ "color": "#4e4e4e" }] },
+          { "featureType": "road.local", "elementType": "labels.text.fill", "stylers": [{ "color": "#616161" }] },
+          { "featureType": "transit", "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
+          { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#000000" }] },
+          { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#3d3d3d" }] }
         ]
       });
 
@@ -101,16 +107,9 @@
           map: map
         });
 
-        // Redireciona ao clicar no polígono diretamente para o DeepLink
+        // ✅ Redirecionamento direto ao clicar
         poligono.addListener('click', () => {
-          const link = b.DeepLink || '';
-          if (link) {
-            const base = 'https://vizinhancaviva.glide.page';
-            const fullUrl = link.startsWith('http') ? link : `${base}/${link}`;
-            window.location.href = fullUrl; // <-- abre na mesma aba
-          } else {
-            alert('Link do bairro não disponível');
-          }
+          openGlideDetail(b.DeepLink || '');
         });
       });
 
@@ -127,8 +126,8 @@
         if (!a.Localizacao) return;
         const parts = a.Localizacao.split(',').map(s => parseFloat(s.trim()));
         if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
-
         const position = { lat: parts[0], lng: parts[1] };
+
         const tipo = a.Tipo_Alerta || 'Alerta';
         const titulo = a.Titulo_Alerta || tipo;
         const status = a.Status || '';
@@ -158,6 +157,16 @@
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
         marker.addListener('click', () => infowindow.open({ map, anchor: marker }));
       });
+    }
+
+    function openGlideDetail(linkOrFragment) {
+      if (!linkOrFragment) {
+        alert('Link do bairro não disponível');
+        return;
+      }
+      const base = 'https://vizinhancaviva.glide.page';
+      const fullUrl = linkOrFragment.startsWith('http') ? linkOrFragment : `${base}/${linkOrFragment}`;
+      window.location.href = fullUrl;
     }
   </script>
 </body>
