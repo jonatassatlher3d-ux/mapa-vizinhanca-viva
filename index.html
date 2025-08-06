@@ -107,6 +107,38 @@
           map: map
         });
 
+// 1. Calcular centro do polígono
+        function calcularCentroPoligono(coordPairs) {
+
+          let latSum = 0, lngSum = 0;
+          coordPairs.forEach(p => {
+            latSum += p.lat;
+            lngSum += p.lng;
+  });
+          return {
+            lat: latSum / coordPairs.length,
+            lng: lngSum / coordPairs.length
+  };
+}
+
+// ... dentro do bairro.forEach (depois de criar o polígono)
+        const centro = calcularCentroPoligono(coordPairs);
+        const nome = b.Nome || 'Sem nome';
+        const reputacaoLabel = !isNaN(reputacao) ? reputacao.toFixed(1) + '⭐' : '?⭐';
+
+// 2. Adicionar marcador com rótulo
+        new google.maps.Marker({
+          position: centro,
+          map: map,
+          icon: null,
+          label: {
+            text: `${nome} (${reputacaoLabel})`,
+            fontSize: '12px',
+            fontWeight: 'bold',
+            color: '#ffffff'
+  }
+});
+
         // ✅ Redirecionamento direto ao clicar
        // poligono.addListener('click', () => {
         //  openGlideDetail(b.DeepLink || '');
@@ -171,4 +203,5 @@
   </script>
 </body>
 </html>
+
 
