@@ -7,20 +7,33 @@
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { height: 100%; width: 100%; }
-    .info-window { font-family: Arial, sans-serif; font-size: 14px; max-width: 260px; }
-    .badge { padding: 4px 8px; border-radius: 4px; color: #fff; display: inline-block; margin-bottom: 6px; font-weight: 600; }
-    .title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .small { font-size: 12px; color: #555; }
-    a { color: #1a73e8; text-decoration: none; }
+    .map-label {
+      position: absolute;
+      background-color: transparent;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: bold;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+    }
   </style>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
 </head>
 <body>
   <div id="map"></div>
 
   <script>
     const BAIRROS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=Bairros';
-    const ALERTAS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=AlertasTemporarios';
+
+    function getCorByReputacao(rep) {
+      if (isNaN(rep)) return '#ff0000';
+      if (rep >= 4.5) return '#4caf50';
+      if (rep >= 3.5) return '#2196f3';
+      if (rep >= 2.5) return '#ffeb3b';
+      if (rep >= 1.5) return '#ff9800';
+      return '#f44336';
+    }
 
     async function fetchJson(url) {
       const res = await fetch(url);
@@ -32,29 +45,39 @@
       }
     }
 
-    function getCorByReputacao(rep) {
-      if (isNaN(rep)) return '#ff0000';
-      if (rep >= 4.5) return '#4caf50';
-      if (rep >= 3.5) return '#2196f3';
-      if (rep >= 2.5) return '#ffeb3b';
-      if (rep >= 1.5) return '#ff9800';
-      return '#f44336';
+    let map;
+
+    function initMap() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            const center = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            criarMapa(center, 15);
+          },
+          () => {
+            iniciarComCentroPadrao();
+          }
+        );
+      } else {
+        iniciarComCentroPadrao();
+      }
     }
 
-    async function initMap() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const latParam = parseFloat(urlParams.get('lat'));
-      const lngParam = parseFloat(urlParams.get('lng'));
+    function iniciarComCentroPadrao() {
+      const center = { lat: -19.82, lng: -40.27 };
+      criarMapa(center, 12);
+    }
 
-      const defaultCenter = { lat: -19.82, lng: -40.27 };
-      const center = (!isNaN(latParam) && !isNaN(lngParam)) ? { lat: latParam, lng: lngParam } : defaultCenter;
-
-      const map = new google.maps.Map(document.getElementById('map'), {
+    function criarMapa(center, zoom) {
+      map = new google.maps.Map(document.getElementById('map'), {
         center,
-        zoom: 12,
+        zoom,
         streetViewControl: false,
         mapTypeControl: false,
-        styles: [ /* estilo dark completo */ 
+        styles: [
           { "elementType": "geometry", "stylers": [{ "color": "#212121" }] },
           { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
           { "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
@@ -78,10 +101,11 @@
         ]
       });
 
-      const [bairros, alertas] = await Promise.all([
-        fetchJson(BAIRROS_URL),
-        fetchJson(ALERTAS_URL)
-      ]);
+      carregarBairros();
+    }
+
+    async function carregarBairros() {
+      const bairros = await fetchJson(BAIRROS_URL);
 
       bairros.forEach(b => {
         const coordsText = b.Poligono || '';
@@ -96,6 +120,8 @@
 
         const reputacao = parseFloat(b.ReputacaoComp || 0);
         const cor = getCorByReputacao(reputacao);
+        const nome = b.Nome || 'Bairro';
+        const texto = `${nome} (${reputacao.toFixed(1)}⭐)`;
 
         const poligono = new google.maps.Polygon({
           paths: coordPairs,
@@ -107,104 +133,39 @@
           map: map
         });
 
-// Função para calcular o centro do polígono
-        function calcularCentroPoligono(coordPairs) {
-          let latSum = 0, lngSum = 0;
-          coordPairs.forEach(p => {
-            latSum += p.lat;
-            lngSum += p.lng;
-  });
-          return {
-            lat: latSum / coordPairs.length,
-            lng: lngSum / coordPairs.length
-  };
-}
+        // Centro do polígono para colocar o nome
+        const centro = calcularCentroide(coordPairs);
 
-// Calcular centro e exibir nome com reputação
-        const centro = calcularCentroPoligono(coordPairs);
-        const nome = b.Nome || 'Sem nome';
-        const reputacaoLabel = !isNaN(reputacao) ? reputacao.toFixed(1).replace('.', ',') + '⭐' : '?⭐';
+        const div = document.createElement('div');
+        div.className = 'map-label';
+        div.textContent = texto;
 
-        new google.maps.Marker({
-          position: centro,
-          map: map,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 0 // Remove o ícone visual
-  },
-          label: {
-            text: `${nome} (${reputacaoLabel})`,
-            fontSize: '12px',
-            fontWeight: 'bold',
-            color: '#ffffff'
-  }
-});
-
-        // ✅ Redirecionamento direto ao clicar
-       // poligono.addListener('click', () => {
-        //  openGlideDetail(b.DeepLink || '');
-     //   });
-      });
-
-      const iconMap = {
-        'Buraco': 'https://images.emojiterra.com/google/noto-emoji/unicode-16.0/color/1024px/1f573.png',
-        'Entulho': 'https://w7.pngwing.com/pngs/241/366/png-transparent-rubbish-bins-waste-paper-baskets-emoji-sticker-emoji-glass-waste-containment-waste.png',
-        'Queimada': 'https://e7.pngegg.com/pngimages/358/307/png-clipart-fire-illustration-emoji-fire-flame-heater-repairman-leaf-orange-thumbnail.png',
-        'Foco de mosquito': 'https://api.hub.jhu.edu/factory/sites/default/files/styles/hub_medium/public/mosquito_emoji120318_0.jpg',
-        'Obstrução': 'https://cdn-icons-png.flaticon.com/512/2228/2228942.png',
-        'Ameaça animal': 'https://em-content.zobj.net/source/apple/81/snake_1f40d.png'
-      };
-
-      alertas.forEach(a => {
-        if (!a.Localizacao) return;
-        const parts = a.Localizacao.split(',').map(s => parseFloat(s.trim()));
-        if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
-        const position = { lat: parts[0], lng: parts[1] };
-
-        const tipo = a.Tipo_Alerta || 'Alerta';
-        const titulo = a.Titulo_Alerta || tipo;
-        const status = a.Status || '';
-        const descricao = a.Descricao || '';
-        const confirms = a.Confirmacoes || 0;
-
-        const iconUrl = iconMap[tipo] || 'https://cdn-icons-png.flaticon.com/512/565/565547.png';
-
-        const marker = new google.maps.Marker({
-          position,
-          map,
-          title: titulo,
-          icon: {
-            url: iconUrl,
-            scaledSize: new google.maps.Size(32, 32)
-          }
-        });
-
-        const infoContent = `
-          <div class="info-window">
-            <div class="title">${titulo}</div>
-            <div>Status: ${status}</div>
-            <div>${descricao}</div>
-            <div>Confirmações: ${confirms}</div>
-          </div>
-        `;
-        const infowindow = new google.maps.InfoWindow({ content: infoContent });
-        marker.addListener('click', () => infowindow.open({ map, anchor: marker }));
+        const label = new google.maps.OverlayView();
+        label.onAdd = function () {
+          const pane = this.getPanes().overlayLayer;
+          pane.appendChild(div);
+        };
+        label.draw = function () {
+          const projection = this.getProjection();
+          const pos = projection.fromLatLngToDivPixel(new google.maps.LatLng(centro.lat, centro.lng));
+          div.style.left = pos.x + 'px';
+          div.style.top = pos.y + 'px';
+        };
+        label.onRemove = function () {
+          div.parentNode.removeChild(div);
+        };
+        label.setMap(map);
       });
     }
 
-    function openGlideDetail(linkOrFragment) {
-      if (!linkOrFragment) {
-        alert('Link do bairro não disponível');
-        return;
-      }
-      const base = 'https://vizinhancaviva.glide.page';
-      const fullUrl = linkOrFragment.startsWith('http') ? linkOrFragment : `${base}/${linkOrFragment}`;
-      window.location.href = fullUrl;
+    function calcularCentroide(pontos) {
+      let lat = 0, lng = 0;
+      pontos.forEach(p => {
+        lat += p.lat;
+        lng += p.lng;
+      });
+      return { lat: lat / pontos.length, lng: lng / pontos.length };
     }
   </script>
 </body>
 </html>
-
-
-
-
