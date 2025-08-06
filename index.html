@@ -107,9 +107,8 @@
           map: map
         });
 
-// 1. Calcular centro do polígono
+// Função para calcular o centro do polígono
         function calcularCentroPoligono(coordPairs) {
-
           let latSum = 0, lngSum = 0;
           coordPairs.forEach(p => {
             latSum += p.lat;
@@ -121,15 +120,18 @@
   };
 }
 
-// ... dentro do bairro.forEach (depois de criar o polígono)
+// Calcular centro e exibir nome com reputação
         const centro = calcularCentroPoligono(coordPairs);
         const nome = b.Nome || 'Sem nome';
-        const reputacaoLabel = !isNaN(reputacao) ? reputacao.toFixed(1) + '⭐' : '?⭐';
+        const reputacaoLabel = !isNaN(reputacao) ? reputacao.toFixed(1).replace('.', ',') + '⭐' : '?⭐';
 
-// 2. Adicionar marcador com rótulo
         new google.maps.Marker({
           position: centro,
           map: map,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 0 // Remove o ícone visual
+  },
           label: {
             text: `${nome} (${reputacaoLabel})`,
             fontSize: '12px',
@@ -202,6 +204,7 @@
   </script>
 </body>
 </html>
+
 
 
 
