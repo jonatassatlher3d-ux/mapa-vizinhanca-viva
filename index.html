@@ -18,11 +18,68 @@
       transform: translate(-50%, -50%);
       text-shadow: 0 0 3px #000;
     }
+    .sidebar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100%;
+  background-color: #111;
+  color: white;
+  overflow-y: auto;
+  padding: 20px;
+  z-index: 999;
+  transition: transform 0.3s ease-in-out;
+  transform: translateX(100%);
+}
+
+.sidebar.visible {
+  transform: translateX(0);
+}
+
+.sidebar.hidden {
+  transform: translateX(100%);
+}
+
   </style>
 </head>
 <body>
   <div id="map"></div>
 
+  <div id="sidebar" class="sidebar hidden">
+  <div id="sidebar-content">
+    <h2 id="bairro-nome">Nome do Bairro</h2>
+    <p id="bairro-descricao">Descrição breve do bairro...</p>
+
+    <div id="avaliacoes">
+      <h3>Notas por categoria</h3>
+      <ul id="notas-categorias"></ul>
+      <p><strong>Média Geral:</strong> <span id="media-geral">0.0</span> ⭐</p>
+    </div>
+
+    <div id="comentarios">
+      <h3>Comentários</h3>
+      <ul id="lista-comentarios"></ul>
+    </div>
+
+    <div id="formulario-avaliacao">
+      <h3>Avalie este bairro!</h3>
+      <form id="form-avaliar">
+        <label>Segurança: <input type="number" min="1" max="5" name="seguranca"></label><br>
+        <label>Ruído: <input type="number" min="1" max="5" name="ruido"></label><br>
+        <label>Limpeza: <input type="number" min="1" max="5" name="limpeza"></label><br>
+        <label>Tranquilidade: <input type="number" min="1" max="5" name="tranquilidade"></label><br>
+        <label>Ideal para crianças: <input type="number" min="1" max="5" name="criancas"></label><br>
+        <label>Ótimos vizinhos: <input type="number" min="1" max="5" name="vizinhos"></label><br>
+        <textarea name="comentario" maxlength="150" placeholder="Seu comentário..."></textarea><br>
+        <label><input type="radio" name="perfil" value="Morador"> Morador</label>
+        <label><input type="radio" name="perfil" value="Visitante"> Visitante</label><br>
+        <button type="submit">Enviar</button>
+      </form>
+    </div>
+  </div>
+</div>
+  
   <script>
     const BAIRROS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=Bairros';
 
@@ -170,3 +227,4 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
 </body>
 </html>
+
