@@ -116,8 +116,9 @@
           const base = 'https://vizinhancaviva.glide.page';
           const deep = b.DeepLink || '';
           const fullUrl = deep.startsWith('http') ? deep : `${base}/${deep}`;
-          window.location.href = fullUrl; // ou window.open(fullUrl, '_blank') se quiser abrir em nova aba
+          window.open(fullUrl, '_blank');
 });
+
 
       });
 
@@ -168,5 +169,6 @@
   </script>
 </body>
 </html>
+
 
 
