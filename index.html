@@ -252,7 +252,6 @@
 
         const reputacao = parseFloat(b.ReputacaoComp || 0);
         const cor = getCorByReputacao(reputacao);
-        const reputacaoLabel = reputacao.toFixed(2);
 
         const poligono = new google.maps.Polygon({
           paths: coordPairs,
@@ -263,6 +262,12 @@
           fillOpacity: 0.2,
           map: map
         });
+
+        // Redirecionamento direto ao clicar no polígono
+        poligono.addListener('click', () => {
+          openGlideDetail(b.DeepLink || '');
+        });
+      });
 
         const resumo = (typeof b.Resumo_IA === 'string') ? b.Resumo_IA : '';
         const truncated = resumo.length > 200 ? resumo.slice(0, 200) + '...' : resumo;
@@ -346,6 +351,7 @@ console.log("Alerta tipo:", tipo, "URL ícone:", iconUrl);
   </script>
 </body>
 </html>
+
 
 
 
