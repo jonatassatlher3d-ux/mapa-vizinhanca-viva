@@ -16,6 +16,7 @@
       white-space: nowrap;
       pointer-events: none;
       transform: translate(-50%, -50%);
+      text-shadow: 0 0 3px #000;
     }
   </style>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
@@ -27,12 +28,12 @@
     const BAIRROS_URL = 'https://script.google.com/macros/s/AKfycbwa8dX3rPfxyD83ow_11KtHewoKk5N1a25pHxYHh_hj8QSgSTzl8zXJSasy-Hr_GWDf0A/exec?sheet=Bairros';
 
     function getCorByReputacao(rep) {
-      if (isNaN(rep)) return '#ff0000';
-      if (rep >= 4.5) return '#4caf50';
-      if (rep >= 3.5) return '#2196f3';
-      if (rep >= 2.5) return '#ffeb3b';
-      if (rep >= 1.5) return '#ff9800';
-      return '#f44336';
+      if (isNaN(rep)) return '#ffffff'; // branco quando sem avaliação
+      if (rep >= 4.5) return '#4caf50'; // verde
+      if (rep >= 3.5) return '#2196f3'; // azul
+      if (rep >= 2.5) return '#ffeb3b'; // amarelo
+      if (rep >= 1.5) return '#ff9800'; // laranja
+      return '#f44336'; // vermelho
     }
 
     async function fetchJson(url) {
@@ -55,7 +56,7 @@
               lat: position.coords.latitude,
               lng: position.coords.longitude
             };
-            criarMapa(center, 16);
+            criarMapa(center, 15);
           },
           () => {
             iniciarComCentroPadrao();
@@ -77,7 +78,7 @@
         zoom,
         streetViewControl: false,
         mapTypeControl: false,
-        styles: [
+        styles: [ // estilo escuro
           { "elementType": "geometry", "stylers": [{ "color": "#212121" }] },
           { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
           { "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
@@ -118,22 +119,21 @@
 
         if (coordPairs.length < 3) return;
 
-        const reputacao = parseFloat(b.ReputacaoComp || 0);
+        const reputacao = parseFloat(b.ReputacaoComp);
         const cor = getCorByReputacao(reputacao);
         const nome = b.Nome || 'Bairro';
-        const texto = `${nome} (${reputacao.toFixed(1)}⭐)`;
+        const texto = `${nome} (${isNaN(reputacao) ? '0.0' : reputacao.toFixed(1)}⭐)`;
 
         const poligono = new google.maps.Polygon({
           paths: coordPairs,
           strokeColor: cor,
-          strokeOpacity: 0.8,
+          strokeOpacity: 1,
           strokeWeight: 2,
           fillColor: cor,
-          fillOpacity: 0.2,
+          fillOpacity: isNaN(reputacao) ? 0 : 0.2,
           map: map
         });
 
-        // Centro do polígono para colocar o nome
         const centro = calcularCentroide(coordPairs);
 
         const div = document.createElement('div');
@@ -142,8 +142,7 @@
 
         const label = new google.maps.OverlayView();
         label.onAdd = function () {
-          const pane = this.getPanes().overlayLayer;
-          pane.appendChild(div);
+          this.getPanes().overlayLayer.appendChild(div);
         };
         label.draw = function () {
           const projection = this.getProjection();
@@ -169,7 +168,3 @@
   </script>
 </body>
 </html>
-
-
-
-
