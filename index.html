@@ -7,11 +7,6 @@
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { height: 100%; width: 100%; }
-    .info-window { font-family: Arial, sans-serif; font-size: 14px; max-width: 260px; }
-    .badge { padding: 4px 8px; border-radius: 4px; color: #fff; display: inline-block; margin-bottom: 6px; font-weight: 600; }
-    .title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .small { font-size: 12px; color: #555; }
-    a { color: #1a73e8; text-decoration: none; }
   </style>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
 </head>
@@ -34,17 +29,28 @@
 
     function getCorByReputacao(rep) {
       if (isNaN(rep)) return '#ff0000';
-      if (rep >= 4.5) return '#4caf50';
-      if (rep >= 3.5) return '#2196f3';
-      if (rep >= 2.5) return '#ffeb3b';
-      if (rep >= 1.5) return '#ff9800';
-      return '#f44336';
+      if (rep >= 4.5) return '#4caf50'; // verde
+      if (rep >= 3.5) return '#2196f3'; // azul
+      if (rep >= 2.5) return '#ffeb3b'; // amarelo
+      if (rep >= 1.5) return '#ff9800'; // laranja
+      return '#f44336'; // vermelho
+    }
+
+    function openGlideDetail(linkOrFragment) {
+      if (!linkOrFragment) {
+        alert('Link do bairro não disponível');
+        return;
+      }
+      const base = 'https://vizinhancaviva.glide.page';
+      const fullUrl = linkOrFragment.startsWith('http') ? linkOrFragment : `${base}/${linkOrFragment}`;
+      window.location.href = fullUrl;
     }
 
     async function initMap() {
       const urlParams = new URLSearchParams(window.location.search);
       const latParam = parseFloat(urlParams.get('lat'));
       const lngParam = parseFloat(urlParams.get('lng'));
+
       const defaultCenter = { lat: -19.82, lng: -40.27 };
       const center = (!isNaN(latParam) && !isNaN(lngParam)) ? { lat: latParam, lng: lngParam } : defaultCenter;
 
@@ -53,27 +59,27 @@
         zoom: 12,
         streetViewControl: false,
         mapTypeControl: false,
-        styles: [/* estilo dark mantido */{
-          "elementType": "geometry","stylers":[{"color":"#212121"}]},
-          {"elementType":"labels.icon","stylers":[{"visibility":"off"}]},
-          {"elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
-          {"elementType":"labels.text.stroke","stylers":[{"color":"#212121"}]},
-          {"featureType":"administrative","elementType":"geometry","stylers":[{"color":"#757575"}]},
-          {"featureType":"administrative.country","elementType":"labels.text.fill","stylers":[{"color":"#9e9e9e"}]},
-          {"featureType":"administrative.locality","elementType":"labels.text.fill","stylers":[{"color":"#bdbdbd"}]},
-          {"featureType":"poi","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
-          {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#181818"}]},
-          {"featureType":"poi.park","elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},
-          {"featureType":"poi.park","elementType":"labels.text.stroke","stylers":[{"color":"#1b1b1b"}]},
-          {"featureType":"road","elementType":"geometry.fill","stylers":[{"color":"#2c2c2c"}]},
-          {"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#8a8a8a"}]},
-          {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#373737"}]},
-          {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#3c3c3c"}]},
-          {"featureType":"road.highway.controlled_access","elementType":"geometry","stylers":[{"color":"#4e4e4e"}]},
-          {"featureType":"road.local","elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},
-          {"featureType":"transit","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
-          {"featureType":"water","elementType":"geometry","stylers":[{"color":"#000000"}]},
-          {"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#3d3d3d"}]}
+        styles: [ // estilo dark
+          { "elementType": "geometry", "stylers": [{ "color": "#212121" }] },
+          { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
+          { "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
+          { "elementType": "labels.text.stroke", "stylers": [{ "color": "#212121" }] },
+          { "featureType": "administrative", "elementType": "geometry", "stylers": [{ "color": "#757575" }] },
+          { "featureType": "administrative.country", "elementType": "labels.text.fill", "stylers": [{ "color": "#9e9e9e" }] },
+          { "featureType": "administrative.locality", "elementType": "labels.text.fill", "stylers": [{ "color": "#bdbdbd" }] },
+          { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
+          { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#181818" }] },
+          { "featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{ "color": "#616161" }] },
+          { "featureType": "poi.park", "elementType": "labels.text.stroke", "stylers": [{ "color": "#1b1b1b" }] },
+          { "featureType": "road", "elementType": "geometry.fill", "stylers": [{ "color": "#2c2c2c" }] },
+          { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#8a8a8a" }] },
+          { "featureType": "road.arterial", "elementType": "geometry", "stylers": [{ "color": "#373737" }] },
+          { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#3c3c3c" }] },
+          { "featureType": "road.highway.controlled_access", "elementType": "geometry", "stylers": [{ "color": "#4e4e4e" }] },
+          { "featureType": "road.local", "elementType": "labels.text.fill", "stylers": [{ "color": "#616161" }] },
+          { "featureType": "transit", "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
+          { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#000000" }] },
+          { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#3d3d3d" }] }
         ]
       });
 
@@ -106,14 +112,8 @@
           map: map
         });
 
-        // ✅ Redirecionar diretamente para a tela de detalhes do Glide
         poligono.addListener('click', () => {
-          const deepLink = b.DeepLink || '';
-          if (deepLink) {
-            window.location.href = deepLink;
-          } else {
-            alert('Detalhes não disponíveis para este bairro.');
-          }
+          openGlideDetail(b.DeepLink || '');
         });
       });
 
@@ -137,7 +137,6 @@
         const status = a.Status || '';
         const descricao = a.Descricao || '';
         const confirms = a.Confirmacoes || 0;
-
         const iconUrl = iconMap[tipo] || 'https://cdn-icons-png.flaticon.com/512/565/565547.png';
 
         const marker = new google.maps.Marker({
@@ -151,8 +150,8 @@
         });
 
         const infoContent = `
-          <div class="info-window">
-            <div class="title">${titulo}</div>
+          <div style="font-family: Arial, sans-serif; font-size: 14px; max-width: 260px;">
+            <div style="font-size: 16px; font-weight: 700;">${titulo}</div>
             <div>Status: ${status}</div>
             <div>${descricao}</div>
             <div>Confirmações: ${confirms}</div>
