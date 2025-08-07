@@ -5,260 +5,270 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mapa Vizinhança Viva</title>
   <style>
-    body {
+    body, html {
       margin: 0;
-      font-family: Arial, sans-serif;
-    }
-
-    #container {
-      display: flex;
-      height: 100vh;
-      width: 100vw;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
     }
 
     #map {
-      flex: 1;
       height: 100%;
+      width: 100%;
     }
 
     #sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
       width: 300px;
-      background-color: #ffffff;
-      border-left: 1px solid #ccc;
-      padding: 16px;
+      height: 100%;
+      background-color: #fff;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+      padding: 20px;
       overflow-y: auto;
+      z-index: 2;
       display: none;
-    }
-
-    h2 {
-      margin-top: 0;
     }
 
     .rating-group {
-      margin-bottom: 12px;
-    }
-
-    .rating-label {
-      display: block;
-      margin-bottom: 4px;
-      font-weight: bold;
-    }
-
-    .rating-options {
       display: flex;
-      gap: 8px;
+      gap: 5px;
+      margin-bottom: 10px;
     }
 
-    .rating-options input[type="radio"] {
+    .rating-group label {
+      cursor: pointer;
+      background-color: #ddd;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+
+    .rating-group input[type="radio"] {
       display: none;
     }
 
-    .rating-options label {
-      background-color: #eee;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .rating-options input[type="radio"]:checked + label {
-      background-color: #007bff;
-      color: #fff;
-    }
-
-    textarea {
-      width: 100%;
-      height: 60px;
-      resize: vertical;
-    }
-
-    button {
-      margin-top: 12px;
-      padding: 10px;
-      width: 100%;
-      background-color: #28a745;
+    .rating-group input[type="radio"]:checked + label {
+      background-color: #4CAF50;
       color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      background-color: #aaa;
-      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
-  <div id="container">
-    <div id="map"></div>
-    <div id="sidebar">
-      <h2 id="bairroNome"></h2>
-      <form id="avaliacaoForm">
+  <div id="map"></div>
+
+  <div id="sidebar">
+    <h2 id="bairro-nome">Detalhes do Bairro</h2>
+    <form id="form-avaliacao">
+      <input type="hidden" name="Bairro" id="bairro-input" />
+
+      <div class="form-group">
+        <label>Segurança:</label>
         <div class="rating-group">
-          <span class="rating-label">Segurança:</span>
-          <div class="rating-options">
-            <input type="radio" name="Seguranca" id="seg1" value="1"><label for="seg1">1</label>
-            <input type="radio" name="Seguranca" id="seg2" value="2"><label for="seg2">2</label>
-            <input type="radio" name="Seguranca" id="seg3" value="3"><label for="seg3">3</label>
-            <input type="radio" name="Seguranca" id="seg4" value="4"><label for="seg4">4</label>
-            <input type="radio" name="Seguranca" id="seg5" value="5"><label for="seg5">5</label>
-          </div>
+          ${[1,2,3,4,5].map(n => `<input type="radio" name="Seguranca" id="seg-${n}" value="${n}"><label for="seg-${n}">${n}</label>`).join('')}
         </div>
+      </div>
 
+      <div class="form-group">
+        <label>Ruído:</label>
         <div class="rating-group">
-          <span class="rating-label">Ruído:</span>
-          <div class="rating-options">
-            <input type="radio" name="Ruido" id="rui1" value="1"><label for="rui1">1</label>
-            <input type="radio" name="Ruido" id="rui2" value="2"><label for="rui2">2</label>
-            <input type="radio" name="Ruido" id="rui3" value="3"><label for="rui3">3</label>
-            <input type="radio" name="Ruido" id="rui4" value="4"><label for="rui4">4</label>
-            <input type="radio" name="Ruido" id="rui5" value="5"><label for="rui5">5</label>
-          </div>
+          ${[1,2,3,4,5].map(n => `<input type="radio" name="Ruido" id="rui-${n}" value="${n}"><label for="rui-${n}">${n}</label>`).join('')}
         </div>
+      </div>
 
+      <div class="form-group">
+        <label>Limpeza:</label>
         <div class="rating-group">
-          <span class="rating-label">Limpeza:</span>
-          <div class="rating-options">
-            <input type="radio" name="Limpeza" id="lim1" value="1"><label for="lim1">1</label>
-            <input type="radio" name="Limpeza" id="lim2" value="2"><label for="lim2">2</label>
-            <input type="radio" name="Limpeza" id="lim3" value="3"><label for="lim3">3</label>
-            <input type="radio" name="Limpeza" id="lim4" value="4"><label for="lim4">4</label>
-            <input type="radio" name="Limpeza" id="lim5" value="5"><label for="lim5">5</label>
-          </div>
+          ${[1,2,3,4,5].map(n => `<input type="radio" name="Limpeza" id="lim-${n}" value="${n}"><label for="lim-${n}">${n}</label>`).join('')}
         </div>
+      </div>
 
+      <div class="form-group">
+        <label>Tranquilidade:</label>
         <div class="rating-group">
-          <span class="rating-label">Tranquilidade:</span>
-          <div class="rating-options">
-            <input type="radio" name="Tranquilidade" id="tran1" value="1"><label for="tran1">1</label>
-            <input type="radio" name="Tranquilidade" id="tran2" value="2"><label for="tran2">2</label>
-            <input type="radio" name="Tranquilidade" id="tran3" value="3"><label for="tran3">3</label>
-            <input type="radio" name="Tranquilidade" id="tran4" value="4"><label for="tran4">4</label>
-            <input type="radio" name="Tranquilidade" id="tran5" value="5"><label for="tran5">5</label>
-          </div>
+          ${[1,2,3,4,5].map(n => `<input type="radio" name="Tranquilidade" id="tranq-${n}" value="${n}"><label for="tranq-${n}">${n}</label>`).join('')}
         </div>
+      </div>
 
+      <div class="form-group">
+        <label>Ideal para crianças:</label>
         <div class="rating-group">
-          <span class="rating-label">Ideal para crianças:</span>
-          <div class="rating-options">
-            <input type="radio" name="IdealCriancas" id="cri1" value="1"><label for="cri1">1</label>
-            <input type="radio" name="IdealCriancas" id="cri2" value="2"><label for="cri2">2</label>
-            <input type="radio" name="IdealCriancas" id="cri3" value="3"><label for="cri3">3</label>
-            <input type="radio" name="IdealCriancas" id="cri4" value="4"><label for="cri4">4</label>
-            <input type="radio" name="IdealCriancas" id="cri5" value="5"><label for="cri5">5</label>
-          </div>
+          ${[1,2,3,4,5].map(n => `<input type="radio" name="IdealCriancas" id="cri-${n}" value="${n}"><label for="cri-${n}">${n}</label>`).join('')}
         </div>
+      </div>
 
+      <div class="form-group">
+        <label>Ótimos vizinhos:</label>
         <div class="rating-group">
-          <span class="rating-label">Ótimos vizinhos:</span>
-          <div class="rating-options">
-            <input type="radio" name="OtimosVizinhos" id="viz1" value="1"><label for="viz1">1</label>
-            <input type="radio" name="OtimosVizinhos" id="viz2" value="2"><label for="viz2">2</label>
-            <input type="radio" name="OtimosVizinhos" id="viz3" value="3"><label for="viz3">3</label>
-            <input type="radio" name="OtimosVizinhos" id="viz4" value="4"><label for="viz4">4</label>
-            <input type="radio" name="OtimosVizinhos" id="viz5" value="5"><label for="viz5">5</label>
-          </div>
+          ${[1,2,3,4,5].map(n => `<input type="radio" name="OtimosVizinhos" id="viz-${n}" value="${n}"><label for="viz-${n}">${n}</label>`).join('')}
         </div>
+      </div>
 
-        <div>
-          <label for="Comentario" class="rating-label">Comentário:</label>
-          <textarea name="Comentario" id="Comentario" placeholder="Digite aqui..."></textarea>
-        </div>
+      <div class="form-group">
+        <label for="comentario">Comentário:</label>
+        <textarea id="comentario" name="Comentario" rows="4" style="width: 100%;"></textarea>
+      </div>
 
-        <button type="submit">Enviar Avaliação</button>
-      </form>
-    </div>
+      <button type="submit">Enviar Avaliação</button>
+    </form>
   </div>
 
   <script>
     let map;
-    let selectedBairro = "";
+    let currentBairro = "";
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: -20.3155, lng: -40.3128 },
         zoom: 13,
-        styles: [ { elementType: "geometry", stylers: [ { color: "#212121" } ] },
-                  { elementType: "labels.icon", stylers: [ { visibility: "off" } ] },
-                  { elementType: "labels.text.fill", stylers: [ { color: "#757575" } ] },
-                  { elementType: "labels.text.stroke", stylers: [ { color: "#212121" } ] },
-                  { featureType: "administrative", elementType: "geometry", stylers: [ { color: "#757575" } ] },
-                  { featureType: "poi", elementType: "geometry", stylers: [ { color: "#2b2b2b" } ] },
-                  { featureType: "road", elementType: "geometry", stylers: [ { color: "#383838" } ] },
-                  { featureType: "water", elementType: "geometry", stylers: [ { color: "#000000" } ] } ]
+        styles: [
+          { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+          { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+          { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+          {
+            featureType: "administrative.locality",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#d59563" }]
+          },
+          {
+            featureType: "poi",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#d59563" }]
+          },
+          {
+            featureType: "poi.park",
+            elementType: "geometry",
+            stylers: [{ color: "#263c3f" }]
+          },
+          {
+            featureType: "poi.park",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#6b9a76" }]
+          },
+          {
+            featureType: "road",
+            elementType: "geometry",
+            stylers: [{ color: "#38414e" }]
+          },
+          {
+            featureType: "road",
+            elementType: "geometry.stroke",
+            stylers: [{ color: "#212a37" }]
+          },
+          {
+            featureType: "road",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#9ca5b3" }]
+          },
+          {
+            featureType: "road.highway",
+            elementType: "geometry",
+            stylers: [{ color: "#746855" }]
+          },
+          {
+            featureType: "road.highway",
+            elementType: "geometry.stroke",
+            stylers: [{ color: "#1f2835" }]
+          },
+          {
+            featureType: "road.highway",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#f3d19c" }]
+          },
+          {
+            featureType: "transit",
+            elementType: "geometry",
+            stylers: [{ color: "#2f3948" }]
+          },
+          {
+            featureType: "transit.station",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#d59563" }]
+          },
+          {
+            featureType: "water",
+            elementType: "geometry",
+            stylers: [{ color: "#17263c" }]
+          },
+          {
+            featureType: "water",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#515c6d" }]
+          },
+          {
+            featureType: "water",
+            elementType: "labels.text.stroke",
+            stylers: [{ color: "#17263c" }]
+          }
+        ]
       });
 
-      // Fecha o painel ao clicar fora de um polígono
       map.addListener("click", () => {
         document.getElementById("sidebar").style.display = "none";
-        selectedBairro = "";
       });
 
-      const url = "https://script.google.com/macros/s/AKfycbyMNlBbsq_ZhO5lkxDqjm_pcptNbXOnfztCvHnjo4UDcpd4PLR3wk3zLBDL8JRQFsUTbg/exec?action=getBairros";
-
-      fetch(url)
+      fetch("https://script.google.com/macros/s/AKfycbyDMJc-iL4wn6mEE0aDTKtG78u-qv2yUokYdoo-_tLPAX_USDTAt_aQVZuoelYuMoZipg/exec?action=getBairros")
         .then(response => response.json())
         .then(data => {
           data.forEach(bairro => {
             if (bairro.Poligono) {
-              const path = bairro.Poligono.split(";").map(p => {
-                const [lat, lng] = p.trim().split(",").map(Number);
+              const path = bairro.Poligono.split(";").map(coord => {
+                const [lat, lng] = coord.trim().split(",").map(Number);
                 return { lat, lng };
               });
 
               const polygon = new google.maps.Polygon({
                 paths: path,
-                strokeColor: "#00bcd4",
+                strokeColor: "#FF0000",
                 strokeOpacity: 0.8,
                 strokeWeight: 2,
-                fillColor: "#00bcd4",
+                fillColor: "#FF0000",
                 fillOpacity: 0.35,
               });
 
               polygon.setMap(map);
 
               polygon.addListener("click", (event) => {
-                selectedBairro = bairro.Nome;
-                document.getElementById("bairroNome").innerText = bairro.Nome;
-                document.getElementById("sidebar").style.display = "block";
                 event.stopPropagation();
+                currentBairro = bairro.Nome;
+                document.getElementById("bairro-nome").innerText = bairro.Nome;
+                document.getElementById("bairro-input").value = bairro.Nome;
+                document.getElementById("sidebar").style.display = "block";
               });
             }
           });
         });
-
-      document.getElementById("avaliacaoForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-
-        const formData = new FormData(e.target);
-        const data = { Bairro: selectedBairro };
-
-        formData.forEach((value, key) => {
-          data[key] = value;
-        });
-
-        fetch("https://script.google.com/macros/s/AKfycbyMNlBbsq_ZhO5lkxDqjm_pcptNbXOnfztCvHnjo4UDcpd4PLR3wk3zLBDL8JRQFsUTbg/exec", {
-          method: "POST",
-          body: JSON.stringify(data),
-          headers: {
-            "Content-Type": "application/json"
-          }
-        }).then(() => {
-          alert("Avaliação enviada com sucesso!");
-          e.target.reset();
-          document.getElementById("sidebar").style.display = "none";
-        }).catch(() => {
-          alert("Erro ao enviar a avaliação.");
-        });
-      });
     }
+
+    document.getElementById("form-avaliacao").addEventListener("submit", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const form = event.target;
+      const formData = new FormData(form);
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      fetch("https://script.google.com/macros/s/AKfycbyDMJc-iL4wn6mEE0aDTKtG78u-qv2yUokYdoo-_tLPAX_USDTAt_aQVZuoelYuMoZipg/exec", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" }
+      })
+        .then((res) => res.json())
+        .then(() => {
+          alert("Avaliação enviada com sucesso!");
+          form.reset();
+          document.getElementById("sidebar").style.display = "none";
+        })
+        .catch((error) => {
+          console.error("Erro:", error);
+          alert("Erro ao enviar avaliação.");
+        });
+    });
   </script>
 
-  <!-- Substitua SUA_CHAVE_API pela sua Google Maps API Key -->
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap">
-  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"></script>
 </body>
 </html>
