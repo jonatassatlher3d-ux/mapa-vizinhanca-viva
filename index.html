@@ -64,6 +64,28 @@
     .stars-inline .on { color: #ffc107; }
     .stars-inline .off { color: #555; }
 
+    /* Comentários recentes */
+    .comentarios {
+      margin: 10px 0 16px 0;
+      border-bottom: 1px solid #2a2a2a;
+      padding-bottom: 12px;
+    }
+    .comentarios h3 {
+      font-size: 14px; margin: 0 0 8px 0; color: #fff;
+    }
+    .comentarios ul {
+      list-style: none; padding: 0; margin: 0;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .comentarios li {
+      font-size: 12px; color: #ddd; line-height: 1.35;
+      border-left: 2px solid #333; padding-left: 8px;
+      white-space: pre-wrap;
+    }
+    .comentarios .empty {
+      font-size: 12px; color: #999;
+    }
+
     label, textarea, button { display: block; margin-top: 10px; width: 100%; box-sizing: border-box; }
     textarea { padding: 5px; border: none; border-radius: 4px; }
     button {
@@ -112,6 +134,12 @@
 
     <!-- RESUMO DAS MÉDIAS -->
     <div id="resumo-medias" class="medias"></div>
+
+    <!-- COMENTÁRIOS RECENTES -->
+    <div id="comentarios" class="comentarios">
+      <h3>Comentários recentes</h3>
+      <div class="empty">Sem comentários ainda.</div>
+    </div>
 
     <!-- FORMULÁRIO -->
     <form id="form-avaliacao" style="display:none;">
@@ -286,12 +314,62 @@
       return true;
     }
 
+    function renderStarsInline(val){
+      const n = Math.max(0, Math.min(5, Math.round(val || 0)));
+      let html = "";
+      for (let i=1;i<=5;i++){
+        html += `<span class="${i<=n?'on':'off'}">★</span>`;
+      }
+      return html;
+    }
+
+    function fillComentarios(raw) {
+      const cont = document.getElementById("comentarios");
+      // Limpa (mantendo o título h3)
+      cont.innerHTML = `<h3>Comentários recentes</h3>`;
+      const wrap = document.createElement("div");
+
+      const texto = (raw ?? "").toString().trim();
+      if (!texto) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Sem comentários ainda.";
+        cont.appendChild(empty);
+        return;
+      }
+
+      // Separa por linhas ou pipes
+      const itens = texto
+        .split(/\r?\n|\|/g)
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+        .slice(0, 5);
+
+      if (itens.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Sem comentários ainda.";
+        cont.appendChild(empty);
+        return;
+      }
+
+      const ul = document.createElement("ul");
+      itens.forEach(t => {
+        const li = document.createElement("li");
+        li.textContent = t;
+        ul.appendChild(li);
+      });
+      cont.appendChild(ul);
+    }
+
     function openSidebar(bairro) {
       bairroSelecionado = bairro.Nome;
+
       // Título
       document.getElementById("sidebar-title").innerText = bairro.Nome || "Bairro";
       // Descrição
       document.getElementById("bairro-desc").innerText = (bairro.Resumo_IA || "Sem descrição disponível.");
+
       // Resumo das médias
       const mediasEl = document.getElementById("resumo-medias");
       const mk = (v)=> isNaN(parseFloat(v)) ? 0 : parseFloat(v);
@@ -314,6 +392,9 @@
         </div>
       `).join("");
 
+      // Comentários
+      fillComentarios(bairro.Comentarios);
+
       // Abre painel e mostra form
       document.getElementById("form-avaliacao").style.display = "block";
       document.getElementById("sidebar").classList.add("open");
@@ -324,13 +405,13 @@
       document.getElementById("sidebar").classList.remove("open");
     }
 
-    function renderStarsInline(val){
-      const n = Math.max(0, Math.min(5, Math.round(val || 0)));
-      let html = "";
-      for (let i=1;i<=5;i++){
-        html += `<span class="${i<=n?'on':'off'}">★</span>`;
-      }
-      return html;
+    function getCorByReputacao(rep) {
+      if (isNaN(rep)) return '#ffffff';
+      if (rep >= 4.5) return '#4caf50';
+      if (rep >= 3.5) return '#2196f3';
+      if (rep >= 2.5) return '#ffeb3b';
+      if (rep >= 1.5) return '#ff9800';
+      return '#f44336';
     }
 
     function initMap(){
