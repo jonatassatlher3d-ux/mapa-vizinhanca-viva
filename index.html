@@ -1,32 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Avaliação de Bairros</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     html, body {
-      height: 100%;
       margin: 0;
+      padding: 0;
+      height: 100%;
       font-family: Arial, sans-serif;
     }
     #map {
-      height: 100%;
       width: 100%;
+      height: 100%;
     }
     #sidebar {
       position: absolute;
       top: 0;
       right: 0;
       width: 300px;
-      max-width: 80%;
+      max-width: 90%;
       height: 100%;
       background: #fff;
       overflow-y: auto;
       padding: 20px;
       display: none;
-      z-index: 999;
-      box-shadow: -2px 0 5px rgba(0,0,0,0.3);
+      z-index: 1000;
+      box-shadow: -2px 0 10px rgba(0,0,0,0.3);
     }
     #formulario select, #formulario textarea, #formulario button {
       width: 100%;
@@ -44,6 +45,7 @@
 </head>
 <body>
   <div id="map"></div>
+
   <div id="sidebar">
     <h2 id="bairro-nome"></h2>
     <p id="bairro-descricao"></p>
@@ -62,8 +64,7 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxJrE7mKdJdMu3mVLUvTg7bvosEP4QBw_R9Jw53qpY4uBqYtoa8eqQHKE8lGo6NgLcBQw/exec";
-    let map, bairros = [];
+    const API_URL = "https://script.google.com/macros/s/AKfycbxJrE7mKdJdMu3mVLUvTg7bvosEP4QBw_R9Jw53qpY4uBqYtoa8eqQHKE8lGo6NgLcBQw/exec"; // <-- Substitua pela sua URL do Apps Script
 
     function getCorByReputacao(rep) {
       if (isNaN(rep)) return '#ffffff';
@@ -74,91 +75,43 @@
       return '#f44336';
     }
 
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 14,
-        styles: [
-  {
-    "elementType": "geometry",
-    "stylers": [{ "color": "#1d2c4d" }]
-  },
-  {
-    "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#8ec3b9" }]
-  },
-  {
-    "elementType": "labels.text.stroke",
-    "stylers": [{ "color": "#1a3646" }]
-  },
-  {
-    "featureType": "administrative.country",
-    "elementType": "geometry.stroke",
-    "stylers": [{ "color": "#4b6878" }]
-  },
-  {
-    "featureType": "administrative.locality",
-    "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#cbd8e3" }]
-  },
-  {
-    "featureType": "poi",
-    "stylers": [{ "visibility": "off" }]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "geometry.fill",
-    "stylers": [{ "color": "#023e58" }]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#3C7680" }]
-  },
-  {
-    "featureType": "road",
-    "elementType": "geometry",
-    "stylers": [{ "color": "#304a7d" }]
-  },
-  {
-    "featureType": "road",
-    "elementType": "labels.icon",
-    "stylers": [{ "visibility": "off" }]
-  },
-  {
-    "featureType": "road.local",
-    "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#cbd8e3" }]
-  },
-  {
-    "featureType": "transit",
-    "stylers": [{ "visibility": "off" }]
-  },
-  {
-    "featureType": "water",
-    "elementType": "geometry.fill",
-    "stylers": [{ "color": "#0e1626" }]
-  },
-  {
-    "featureType": "water",
-    "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#4e6d70" }]
-  }
-]
+    async function initMap() {
+      const { Map } = await google.maps.importLibrary("maps");
+      const { ColorScheme } = await google.maps.importLibrary("core");
 
-      navigator.geolocation.getCurrentPosition(pos => {
-        map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      const map = new Map(document.getElementById("map"), {
+        zoom: 14,
+        center: { lat: -14.2400732, lng: -53.1805017 }, // fallback para centro do Brasil
+        mapId: "221ed1c2ca177626600f45d0", // <-- Substitua pelo seu Map ID do Google Maps
+        colorScheme: ColorScheme.DARK,
+        disableDefaultUI: true
       });
 
+      // Zoom para localização do usuário
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const coords = {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+            };
+            map.setCenter(coords);
+            map.setZoom(15);
+          }
+        );
+      }
+
+      // Carregar bairros
       fetch(`${API_URL}?action=getBairros`)
         .then(res => res.json())
         .then(data => {
-          bairros = data;
           data.forEach(bairro => {
             if (!bairro.Poligono) return;
 
             const path = JSON.parse(bairro.Poligono);
             const reputacao = parseFloat(bairro.ReputacaoComp);
             const cor = getCorByReputacao(reputacao);
+
             const poligono = new google.maps.Polygon({
               paths: path,
               strokeColor: cor,
@@ -194,6 +147,7 @@
                 e.preventDefault();
                 fetch(API_URL, {
                   method: "POST",
+                  headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
                     action: "enviarAvaliacao",
                     Bairro: bairro.Nome,
@@ -204,9 +158,10 @@
                     IdealCriancas: +document.getElementById("criancas").value,
                     OtimosVizinhos: +document.getElementById("vizinhos").value,
                     Comentario: document.getElementById("comentario").value
-                  }),
-                  headers: { "Content-Type": "application/json" }
-                }).then(res => res.json()).then(r => {
+                  })
+                })
+                .then(res => res.json())
+                .then(result => {
                   alert("Avaliação enviada com sucesso!");
                   document.getElementById("formulario").reset();
                 });
@@ -217,7 +172,8 @@
     }
   </script>
 
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap">
+  </script>
 </body>
 </html>
-
