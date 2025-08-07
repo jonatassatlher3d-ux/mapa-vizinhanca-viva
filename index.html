@@ -2,154 +2,124 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mapa Vizinhança Viva</title>
   <style>
-    html, body, #map {
-      height: 100%;
+    body, html {
       margin: 0;
       padding: 0;
+      height: 100%;
       font-family: Arial, sans-serif;
     }
+
     #map {
-      width: 100%;
-      height: 100vh;
+      height: 100%;
+      width: calc(100% - 300px);
+      float: left;
     }
+
     #sidebar {
-      position: fixed;
-      top: 0; right: 0;
-      width: 320px;
-      height: 100vh;
-      background: #222;
-      color: #eee;
-      padding: 20px;
-      overflow-y: auto;
-      box-shadow: -3px 0 8px rgba(0,0,0,0.7);
-      display: none;
-      z-index: 10;
-    }
-    #sidebar h2 {
-      margin-top: 0;
-    }
-    .rating-group {
-      display: flex;
-      gap: 5px;
-      margin-bottom: 10px;
-    }
-    .rating-group label {
-      background: #444;
-      border-radius: 3px;
-      padding: 5px 10px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .rating-group input[type="radio"] {
-      display: none;
-    }
-    .rating-group input[type="radio"]:checked + label {
-      background: #4caf50;
+      width: 300px;
+      height: 100%;
+      float: right;
+      background-color: #1e1e1e;
       color: white;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
     }
-    textarea {
+
+    label, input, select, textarea, button {
+      display: block;
+      margin-top: 10px;
       width: 100%;
-      resize: vertical;
-      min-height: 60px;
-      margin-bottom: 10px;
-      background: #333;
-      color: #eee;
+      box-sizing: border-box;
+    }
+
+    input, select, textarea {
+      padding: 5px;
       border: none;
-      padding: 8px;
       border-radius: 4px;
     }
+
     button {
-      background: #4caf50;
-      border: none;
+      background-color: #28a745;
       color: white;
       padding: 10px;
-      cursor: pointer;
+      border: none;
       border-radius: 4px;
-      font-size: 16px;
-      width: 100%;
+      cursor: pointer;
     }
+
     button:hover {
-      background: #45a049;
-    }
-    .info-item {
-      margin-bottom: 8px;
+      background-color: #218838;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
+
   <div id="sidebar">
-    <h2 id="bairroNome"></h2>
-    <p id="bairroResumo"></p>
-    <div class="info-item"><strong>Segurança:</strong> <span id="seguranca"></span></div>
-    <div class="info-item"><strong>Ruído:</strong> <span id="ruido"></span></div>
-    <div class="info-item"><strong>Limpeza:</strong> <span id="limpeza"></span></div>
-    <div class="info-item"><strong>Tranquilidade:</strong> <span id="tranquilidade"></span></div>
-    <div class="info-item"><strong>Ideal para crianças:</strong> <span id="idealCriancas"></span></div>
-    <div class="info-item"><strong>Ótimos vizinhos:</strong> <span id="otimosVizinhos"></span></div>
-    <h3>Deixe sua avaliação</h3>
-    <form id="avaliacaoForm">
-      <input type="hidden" id="bairroSelecionado" name="bairro" />
-      
-      <label>Segurança</label>
-      <div class="rating-group" id="segurancaGroup">
-        <input type="radio" name="Seguranca" id="seg1" value="1" required /><label for="seg1">1</label>
-        <input type="radio" name="Seguranca" id="seg2" value="2" /><label for="seg2">2</label>
-        <input type="radio" name="Seguranca" id="seg3" value="3" /><label for="seg3">3</label>
-        <input type="radio" name="Seguranca" id="seg4" value="4" /><label for="seg4">4</label>
-        <input type="radio" name="Seguranca" id="seg5" value="5" /><label for="seg5">5</label>
-      </div>
+    <h2>Bairro Selecionado</h2>
+    <div id="bairro-nome">Clique em um bairro</div>
 
-      <label>Ruído</label>
-      <div class="rating-group" id="ruidoGroup">
-        <input type="radio" name="Ruido" id="rui1" value="1" required /><label for="rui1">1</label>
-        <input type="radio" name="Ruido" id="rui2" value="2" /><label for="rui2">2</label>
-        <input type="radio" name="Ruido" id="rui3" value="3" /><label for="rui3">3</label>
-        <input type="radio" name="Ruido" id="rui4" value="4" /><label for="rui4">4</label>
-        <input type="radio" name="Ruido" id="rui5" value="5" /><label for="rui5">5</label>
-      </div>
+    <form id="form-avaliacao" style="display: none;">
+      <label for="Seguranca">Segurança</label>
+      <select name="Seguranca" required>
+        <option value="">Selecione</option>
+        <option value="1">1 - Péssimo</option>
+        <option value="2">2 - Ruim</option>
+        <option value="3">3 - Médio</option>
+        <option value="4">4 - Bom</option>
+        <option value="5">5 - Excelente</option>
+      </select>
 
-      <label>Limpeza</label>
-      <div class="rating-group" id="limpezaGroup">
-        <input type="radio" name="Limpeza" id="lim1" value="1" required /><label for="lim1">1</label>
-        <input type="radio" name="Limpeza" id="lim2" value="2" /><label for="lim2">2</label>
-        <input type="radio" name="Limpeza" id="lim3" value="3" /><label for="lim3">3</label>
-        <input type="radio" name="Limpeza" id="lim4" value="4" /><label for="lim4">4</label>
-        <input type="radio" name="Limpeza" id="lim5" value="5" /><label for="lim5">5</label>
-      </div>
+      <label for="Ruido">Ruído</label>
+      <select name="Ruido" required>
+        <option value="">Selecione</option>
+        <option value="1">1 - Muito alto</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5 - Muito silencioso</option>
+      </select>
 
-      <label>Tranquilidade</label>
-      <div class="rating-group" id="tranquilidadeGroup">
-        <input type="radio" name="Tranquilidade" id="tra1" value="1" required /><label for="tra1">1</label>
-        <input type="radio" name="Tranquilidade" id="tra2" value="2" /><label for="tra2">2</label>
-        <input type="radio" name="Tranquilidade" id="tra3" value="3" /><label for="tra3">3</label>
-        <input type="radio" name="Tranquilidade" id="tra4" value="4" /><label for="tra4">4</label>
-        <input type="radio" name="Tranquilidade" id="tra5" value="5" /><label for="tra5">5</label>
-      </div>
+      <label for="Limpeza">Limpeza</label>
+      <select name="Limpeza" required>
+        <option value="">Selecione</option>
+        <option value="1">1 - Muito sujo</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5 - Muito limpo</option>
+      </select>
 
-      <label>Ideal para crianças</label>
-      <div class="rating-group" id="idealCriancasGroup">
-        <input type="radio" name="IdealCriancas" id="ide1" value="1" required /><label for="ide1">1</label>
-        <input type="radio" name="IdealCriancas" id="ide2" value="2" /><label for="ide2">2</label>
-        <input type="radio" name="IdealCriancas" id="ide3" value="3" /><label for="ide3">3</label>
-        <input type="radio" name="IdealCriancas" id="ide4" value="4" /><label for="ide4">4</label>
-        <input type="radio" name="IdealCriancas" id="ide5" value="5" /><label for="ide5">5</label>
-      </div>
+      <label for="Tranquilidade">Tranquilidade</label>
+      <select name="Tranquilidade" required>
+        <option value="">Selecione</option>
+        <option value="1">1 - Muito agitado</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5 - Muito tranquilo</option>
+      </select>
 
-      <label>Ótimos vizinhos</label>
-      <div class="rating-group" id="otimosVizinhosGroup">
-        <input type="radio" name="OtimosVizinhos" id="oti1" value="1" required /><label for="oti1">1</label>
-        <input type="radio" name="OtimosVizinhos" id="oti2" value="2" /><label for="oti2">2</label>
-        <input type="radio" name="OtimosVizinhos" id="oti3" value="3" /><label for="oti3">3</label>
-        <input type="radio" name="OtimosVizinhos" id="oti4" value="4" /><label for="oti4">4</label>
-        <input type="radio" name="OtimosVizinhos" id="oti5" value="5" /><label for="oti5">5</label>
-      </div>
+      <label for="IdealCriancas">Ideal para crianças?</label>
+      <select name="IdealCriancas" required>
+        <option value="">Selecione</option>
+        <option value="Sim">Sim</option>
+        <option value="Não">Não</option>
+      </select>
 
-      <label>Comentário</label>
-      <textarea name="Comentario" id="comentario" placeholder="Escreva seu comentário"></textarea>
+      <label for="OtimosVizinhos">Ótimos vizinhos?</label>
+      <select name="OtimosVizinhos" required>
+        <option value="">Selecione</option>
+        <option value="Sim">Sim</option>
+        <option value="Não">Não</option>
+      </select>
+
+      <label for="Comentario">Comentário</label>
+      <textarea name="Comentario" rows="3"></textarea>
 
       <button type="submit">Enviar Avaliação</button>
     </form>
@@ -157,230 +127,166 @@
 
   <script>
     let map;
-    let polygons = [];
-    let bairros = [];
-    let selectedBairro = null;
+    let bairroSelecionado = "";
 
-    // Cor de acordo com reputação
-    function getCorByReputacao(rep) {
-      rep = parseFloat(rep);
-      if (isNaN(rep)) return '#ffffff';
-      if (rep >= 4.5) return '#4caf50';
-      if (rep >= 3.5) return '#2196f3';
-      if (rep >= 2.5) return '#ffeb3b';
-      if (rep >= 1.5) return '#ff9800';
-      return '#f44336';
-    }
+    const estilosDark = [
+      { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+      { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+      {
+        featureType: "administrative.locality",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#d59563" }]
+      },
+      {
+        featureType: "poi",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#d59563" }]
+      },
+      {
+        featureType: "poi.park",
+        elementType: "geometry",
+        stylers: [{ color: "#263c3f" }]
+      },
+      {
+        featureType: "poi.park",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#6b9a76" }]
+      },
+      {
+        featureType: "road",
+        elementType: "geometry",
+        stylers: [{ color: "#38414e" }]
+      },
+      {
+        featureType: "road",
+        elementType: "geometry.stroke",
+        stylers: [{ color: "#212a37" }]
+      },
+      {
+        featureType: "road",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#9ca5b3" }]
+      },
+      {
+        featureType: "road.highway",
+        elementType: "geometry",
+        stylers: [{ color: "#746855" }]
+      },
+      {
+        featureType: "road.highway",
+        elementType: "geometry.stroke",
+        stylers: [{ color: "#1f2835" }]
+      },
+      {
+        featureType: "road.highway",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#f3d19c" }]
+      },
+      {
+        featureType: "transit",
+        elementType: "geometry",
+        stylers: [{ color: "#2f3948" }]
+      },
+      {
+        featureType: "transit.station",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#d59563" }]
+      },
+      {
+        featureType: "water",
+        elementType: "geometry",
+        stylers: [{ color: "#17263c" }]
+      },
+      {
+        featureType: "water",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#515c6d" }]
+      },
+      {
+        featureType: "water",
+        elementType: "labels.text.stroke",
+        stylers: [{ color: "#17263c" }]
+      }
+    ];
 
-    // Inicializa o mapa
     function initMap() {
-      map = new google.maps.Map(document.getElementById('map'), {
+      map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: -20.3155, lng: -40.3128 },
         zoom: 13,
-        mapId: 'YOUR_MAP_ID', // Substitua pelo seu Map ID do Google Maps, ou remova essa linha para padrão
-        styles: [ // dark style básico
-          { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
-          { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
-          { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
-          {
-            featureType: 'administrative.locality',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#d59563' }],
-          },
-          {
-            featureType: 'poi',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#d59563' }],
-          },
-          {
-            featureType: 'poi.park',
-            elementType: 'geometry',
-            stylers: [{ color: '#263c3f' }],
-          },
-          {
-            featureType: 'road',
-            elementType: 'geometry',
-            stylers: [{ color: '#38414e' }],
-          },
-          {
-            featureType: 'road',
-            elementType: 'geometry.stroke',
-            stylers: [{ color: '#212a37' }],
-          },
-          {
-            featureType: 'road',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#9ca5b3' }],
-          },
-          {
-            featureType: 'transit',
-            elementType: 'geometry',
-            stylers: [{ color: '#2f3948' }],
-          },
-          {
-            featureType: 'water',
-            elementType: 'geometry',
-            stylers: [{ color: '#17263c' }],
-          },
-          {
-            featureType: 'water',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#515c6d' }],
-          },
-          {
-            featureType: 'water',
-            elementType: 'labels.text.stroke',
-            stylers: [{ color: '#17263c' }],
-          },
-        ],
+        styles: estilosDark
       });
 
-      // Clica fora dos polígonos: esconde sidebar
-      map.addListener('click', () => {
-        selectedBairro = null;
-        hideSidebar();
-      });
+      const url = "https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec?action=getBairros";
 
-      carregarBairros();
-    }
+      fetch(url)
+        .then(resp => resp.json())
+        .then(data => {
+          data.forEach(bairro => {
+            if (bairro.Poligono) {
+              const path = bairro.Poligono
+                .split(";")
+                .map(p => {
+                  const [lat, lng] = p.trim().split(",").map(Number);
+                  return { lat, lng };
+                });
 
-    // Carregar bairros via JSONP
-    function carregarBairros() {
-      window.bairrosCallback = function(data) {
-        bairros = data;
-        desenharPoligonos();
-      };
+              const polygon = new google.maps.Polygon({
+                paths: path,
+                strokeColor: "#FF0000",
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: "#FF0000",
+                fillOpacity: 0.35,
+              });
 
-      const script = document.createElement('script');
-      script.src = 'hhttps://script.google.com/macros/s/AKfycbxQWdsd9IGuJ2cxu7L_hhLj00cmtg6_3GYrHdYroeOdFRJ5kgxSgw80mx1k8e5OAdmjwA/exec?action=getBairros&callback=bairrosCallback';
-      document.body.appendChild(script);
-    }
+              polygon.setMap(map);
 
-    // Desenha os polígonos no mapa
-    function desenharPoligonos() {
-      polygons.forEach(p => p.setMap(null));
-      polygons = [];
-
-      bairros.forEach(bairro => {
-        if (!bairro.Poligono) return;
-
-        const path = bairro.Poligono.split(';')
-          .map(coord => coord.trim())
-          .filter(coord => coord.length > 0)
-          .map(coord => {
-            const [lat, lng] = coord.split(',').map(Number);
-            return { lat, lng };
+              polygon.addListener("click", () => {
+                bairroSelecionado = bairro.Nome;
+                document.getElementById("bairro-nome").innerText = bairro.Nome;
+                document.getElementById("form-avaliacao").style.display = "block";
+              });
+            }
           });
-
-        const rep = parseFloat(bairro.ReputacaoComp) || 0;
-        const fillColor = rep === 0 ? '#FFFFFF00' : getCorByReputacao(rep);
-
-        const polygon = new google.maps.Polygon({
-          paths: path,
-          strokeColor: fillColor,
-          strokeOpacity: 0.8,
-          strokeWeight: 2,
-          fillColor: fillColor,
-          fillOpacity: rep === 0 ? 0 : 0.3,
-          map: map,
         });
-
-        polygon.addListener('click', (e) => {
-          selectedBairro = bairro;
-          showSidebar(bairro);
-          e.stopPropagation();
-        });
-
-        polygons.push(polygon);
-
-        // Centraliza e coloca label no centro do polígono
-        const bounds = new google.maps.LatLngBounds();
-        path.forEach(coord => bounds.extend(coord));
-        const center = bounds.getCenter();
-
-        new google.maps.Marker({
-          position: center,
-          map: map,
-          label: {
-            text: `${bairro.Nome} (${rep.toFixed(1)}⭐)`,
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '14px',
-          },
-          clickable: false,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 0, // invisível
-          },
-        });
-      });
     }
 
-    // Mostra o painel lateral com dados do bairro selecionado
-    function showSidebar(bairro) {
-      document.getElementById('sidebar').style.display = 'block';
-      document.getElementById('bairroNome').textContent = bairro.Nome || '';
-      document.getElementById('bairroResumo').textContent = bairro.Resumo_IA || '';
-      document.getElementById('seguranca').textContent = bairro.Seguranca ? bairro.Seguranca + '⭐' : '-';
-      document.getElementById('ruido').textContent = bairro.Ruido ? bairro.Ruido + '⭐' : '-';
-      document.getElementById('limpeza').textContent = bairro.Limpeza ? bairro.Limpeza + '⭐' : '-';
-      document.getElementById('tranquilidade').textContent = bairro.Tranquilidade ? bairro.Tranquilidade + '⭐' : '-';
-      document.getElementById('idealCriancas').textContent = bairro.IdealCriancas ? bairro.IdealCriancas + '⭐' : '-';
-      document.getElementById('otimosVizinhos').textContent = bairro.OtimosVizinhos ? bairro.OtimosVizinhos + '⭐' : '-';
-
-      // Define o bairro no form para envio
-      document.getElementById('bairroSelecionado').value = bairro.Nome;
-
-      // Limpa formulário
-      document.getElementById('avaliacaoForm').reset();
-    }
-
-    // Esconde o painel lateral
-    function hideSidebar() {
-      document.getElementById('sidebar').style.display = 'none';
-    }
-
-    // Enviar avaliação
-    document.getElementById('avaliacaoForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-
-      if (!selectedBairro) {
-        alert('Selecione um bairro antes de enviar a avaliação.');
-        return;
-      }
+    document.getElementById("form-avaliacao").addEventListener("submit", function (e) {
+      e.preventDefault();
 
       const formData = new FormData(this);
-
       const data = {
-        Bairro: formData.get('bairro'),
-        Seguranca: formData.get('Seguranca'),
-        Ruido: formData.get('Ruido'),
-        Limpeza: formData.get('Limpeza'),
-        Tranquilidade: formData.get('Tranquilidade'),
-        IdealCriancas: formData.get('IdealCriancas'),
-        OtimosVizinhos: formData.get('OtimosVizinhos'),
-        Comentario: formData.get('Comentario'),
+        Bairro: bairroSelecionado,
+        Seguranca: formData.get("Seguranca"),
+        Ruido: formData.get("Ruido"),
+        Limpeza: formData.get("Limpeza"),
+        Tranquilidade: formData.get("Tranquilidade"),
+        IdealCriancas: formData.get("IdealCriancas"),
+        OtimosVizinhos: formData.get("OtimosVizinhos"),
+        Comentario: formData.get("Comentario")
       };
 
-      fetch('https://script.google.com/macros/s/AKfycbxQWdsd9IGuJ2cxu7L_hhLj00cmtg6_3GYrHdYroeOdFRJ5kgxSgw80mx1k8e5OAdmjwA/exec', {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' },
-        mode: 'no-cors' // necessário para evitar bloqueio CORS, porém não permite resposta
-      }).then(() => {
-        alert('Avaliação enviada com sucesso! Obrigado.');
-        hideSidebar();
-      }).catch(err => {
-        alert('Erro ao enviar avaliação. Tente novamente.');
-        console.error(err);
-      });
+      fetch("https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec", {
+        method: "POST",
+        body: JSON.stringify(data)
+      })
+        .then(resp => resp.json())
+        .then(resp => {
+          alert("Avaliação enviada com sucesso!");
+          this.reset();
+        })
+        .catch(err => {
+          alert("Erro ao enviar avaliação.");
+          console.error(err);
+        });
     });
-
   </script>
 
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap">
-  </script>
+  <script
+    async
+    defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"
+  ></script>
 </body>
 </html>
-
