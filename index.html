@@ -5,73 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mapa Vizinhança Viva</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body, html {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
       font-family: Arial, sans-serif;
     }
 
     #map {
-      height: 100%;
+      height: 100vh;
       width: 100%;
     }
 
     #sidebar {
-      position: absolute;
+      position: fixed;
       top: 0;
-      right: 0;
-      width: 320px;
+      right: -400px;
+      width: 350px;
       height: 100%;
-      background: #fff;
+      background-color: #fff;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.5);
       padding: 20px;
+      transition: right 0.3s ease;
       overflow-y: auto;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-      box-shadow: -2px 0 5px rgba(0,0,0,0.3);
       z-index: 10;
     }
 
     #sidebar.active {
-      transform: translateX(0);
+      right: 0;
     }
 
-    h2 {
+    #sidebar h2 {
       margin-top: 0;
-    }
-
-    label {
-      display: block;
-      margin-top: 15px;
     }
 
     .rating-group {
       display: flex;
       justify-content: space-between;
-      margin-top: 5px;
+      margin-bottom: 10px;
     }
 
     .rating-group button {
-      width: 35px;
-      height: 35px;
-      font-size: 16px;
+      flex: 1;
+      margin: 0 2px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      background-color: #eee;
+      cursor: pointer;
+    }
+
+    .rating-group button.selected {
+      background-color: #2196F3;
+      color: #fff;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
     }
 
     textarea {
       width: 100%;
       height: 60px;
-      margin-top: 10px;
     }
 
     button[type="submit"] {
-      margin-top: 20px;
+      margin-top: 10px;
       width: 100%;
       padding: 10px;
-      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -79,60 +83,38 @@
   <div id="map"></div>
 
   <div id="sidebar">
-    <h2 id="bairro-nome"></h2>
+    <h2 id="bairro-nome">Bairro</h2>
     <form id="avaliacao-form">
+      <input type="hidden" id="bairro-selecionado" name="Bairro" />
+
       <label>Segurança:</label>
-      <div class="rating-group" data-field="Seguranca">
-        <button type="button">1</button>
-        <button type="button">2</button>
-        <button type="button">3</button>
-        <button type="button">4</button>
-        <button type="button">5</button>
+      <div class="rating-group" id="seguranca">
+        ${[1,2,3,4,5].map(i => `<button type="button" data-value="${i}">${i}</button>`).join('')}
       </div>
 
       <label>Ruído:</label>
-      <div class="rating-group" data-field="Ruido">
-        <button type="button">1</button>
-        <button type="button">2</button>
-        <button type="button">3</button>
-        <button type="button">4</button>
-        <button type="button">5</button>
+      <div class="rating-group" id="ruido">
+        ${[1,2,3,4,5].map(i => `<button type="button" data-value="${i}">${i}</button>`).join('')}
       </div>
 
       <label>Limpeza:</label>
-      <div class="rating-group" data-field="Limpeza">
-        <button type="button">1</button>
-        <button type="button">2</button>
-        <button type="button">3</button>
-        <button type="button">4</button>
-        <button type="button">5</button>
+      <div class="rating-group" id="limpeza">
+        ${[1,2,3,4,5].map(i => `<button type="button" data-value="${i}">${i}</button>`).join('')}
       </div>
 
       <label>Tranquilidade:</label>
-      <div class="rating-group" data-field="Tranquilidade">
-        <button type="button">1</button>
-        <button type="button">2</button>
-        <button type="button">3</button>
-        <button type="button">4</button>
-        <button type="button">5</button>
+      <div class="rating-group" id="tranquilidade">
+        ${[1,2,3,4,5].map(i => `<button type="button" data-value="${i}">${i}</button>`).join('')}
       </div>
 
-      <label>Ideal para Crianças:</label>
-      <div class="rating-group" data-field="IdealCriancas">
-        <button type="button">1</button>
-        <button type="button">2</button>
-        <button type="button">3</button>
-        <button type="button">4</button>
-        <button type="button">5</button>
+      <label>Ideal para crianças:</label>
+      <div class="rating-group" id="idealCriancas">
+        ${[1,2,3,4,5].map(i => `<button type="button" data-value="${i}">${i}</button>`).join('')}
       </div>
 
-      <label>Ótimos Vizinhos:</label>
-      <div class="rating-group" data-field="OtimosVizinhos">
-        <button type="button">1</button>
-        <button type="button">2</button>
-        <button type="button">3</button>
-        <button type="button">4</button>
-        <button type="button">5</button>
+      <label>Ótimos vizinhos:</label>
+      <div class="rating-group" id="otimosVizinhos">
+        ${[1,2,3,4,5].map(i => `<button type="button" data-value="${i}">${i}</button>`).join('')}
       </div>
 
       <label>Comentário:</label>
@@ -144,40 +126,37 @@
 
   <script>
     let map;
-    let selectedBairro = "";
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbwA7e2UzDUkgQIDmA7X2OKWptwmQUY_LZUVmD9uyQ_CnnXKUvOH0GU1isgoznj38IcrtQ/exec?action=getBairros";
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: -20.3155, lng: -40.3128 },
         zoom: 13,
-        styles: [ // Modo escuro
-          { "elementType": "geometry", "stylers": [{ "color": "#212121" }] },
-          { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
-          { "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
-          { "elementType": "labels.text.stroke", "stylers": [{ "color": "#212121" }] },
-          { "featureType": "administrative", "elementType": "geometry", "stylers": [{ "color": "#757575" }] },
-          { "featureType": "landscape", "elementType": "geometry", "stylers": [{ "color": "#181818" }] },
-          { "featureType": "poi", "elementType": "geometry", "stylers": [{ "color": "#1f1f1f" }] },
-          { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#383838" }] },
-          { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#3c3c3c" }] },
-          { "featureType": "transit", "elementType": "geometry", "stylers": [{ "color": "#2f2f2f" }] },
-          { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#000000" }] }
+        styles: [ // estilo dark
+          { elementType: "geometry", stylers: [{ color: "#212121" }] },
+          { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+          { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+          { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+          { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
+          { featureType: "poi", stylers: [{ visibility: "off" }] },
+          { featureType: "road", elementType: "geometry", stylers: [{ color: "#383838" }] },
+          { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
+          { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3c3c3c" }] },
+          { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] }
         ]
       });
 
-      map.addListener("click", () => {
-        document.getElementById("sidebar").classList.remove("active");
-      });
+      const sidebar = document.getElementById("sidebar");
+      const nomeBairroEl = document.getElementById("bairro-nome");
+      const bairroInput = document.getElementById("bairro-selecionado");
 
-      const url = "https://script.google.com/macros/s/AKfycbwA7e2UzDUkgQIDmA7X2OKWptwmQUY_LZUVmD9uyQ_CnnXKUvOH0GU1isgoznj38IcrtQ/exec?action=getBairros";
-
-      fetch(url)
+      fetch(webAppUrl)
         .then(res => res.json())
         .then(data => {
           data.forEach(bairro => {
             if (bairro.Poligono) {
-              const path = bairro.Poligono.split(";").map(coord => {
-                const [lat, lng] = coord.trim().split(",").map(Number);
+              const path = bairro.Poligono.split(";").map(p => {
+                const [lat, lng] = p.split(",").map(Number);
                 return { lat, lng };
               });
 
@@ -192,64 +171,79 @@
 
               polygon.setMap(map);
 
-              polygon.addListener("click", (event) => {
-                event.stopPropagation?.();
-
-                selectedBairro = bairro.Nome;
-                document.getElementById("bairro-nome").textContent = selectedBairro;
-                document.getElementById("sidebar").classList.add("active");
+              polygon.addListener("click", (e) => {
+                nomeBairroEl.textContent = bairro.Nome;
+                bairroInput.value = bairro.Nome;
+                sidebar.classList.add("active");
               });
             }
+          });
+
+          // Fecha painel ao clicar fora de qualquer polígono
+          map.addListener("click", () => {
+            sidebar.classList.remove("active");
           });
         });
     }
 
+    // Controle de botões únicos por grupo
     document.querySelectorAll(".rating-group").forEach(group => {
-      group.addEventListener("click", (e) => {
+      group.addEventListener("click", e => {
         if (e.target.tagName === "BUTTON") {
-          group.querySelectorAll("button").forEach(btn => btn.classList.remove("selected"));
+          [...group.children].forEach(btn => btn.classList.remove("selected"));
           e.target.classList.add("selected");
         }
       });
     });
 
-    document.getElementById("avaliacao-form").addEventListener("submit", async (e) => {
+    // Envio do formulário
+    document.getElementById("avaliacao-form").addEventListener("submit", async function(e) {
       e.preventDefault();
 
-      const form = e.target;
-      const data = { Bairro: selectedBairro };
+      const data = {
+        Bairro: document.getElementById("bairro-selecionado").value,
+        Comentario: this.Comentario.value,
+        Seguranca: getSelectedValue("seguranca"),
+        Ruido: getSelectedValue("ruido"),
+        Limpeza: getSelectedValue("limpeza"),
+        Tranquilidade: getSelectedValue("tranquilidade"),
+        IdealCriancas: getSelectedValue("idealCriancas"),
+        OtimosVizinhos: getSelectedValue("otimosVizinhos")
+      };
 
-      document.querySelectorAll(".rating-group").forEach(group => {
-        const field = group.getAttribute("data-field");
-        const selected = group.querySelector(".selected");
-        data[field] = selected ? selected.textContent : "";
-      });
+      try {
+        const response = await fetch(webAppUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
 
-      data.Comentario = form.Comentario.value;
-
-      const response = await fetch("https://script.google.com/macros/s/AKfycbwA7e2UzDUkgQIDmA7X2OKWptwmQUY_LZUVmD9uyQ_CnnXKUvOH0GU1isgoznj38IcrtQ/exec", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
+        const result = await response.json();
+        if (result.status === "success") {
+          alert("Avaliação enviada com sucesso!");
+          this.reset();
+          document.querySelectorAll(".selected").forEach(btn => btn.classList.remove("selected"));
+          document.getElementById("sidebar").classList.remove("active");
+        } else {
+          alert("Erro ao enviar: " + result.message);
         }
-      });
-
-      if (response.ok) {
-        alert("Avaliação enviada com sucesso!");
-        form.reset();
-        document.querySelectorAll(".selected").forEach(btn => btn.classList.remove("selected"));
-        document.getElementById("sidebar").classList.remove("active");
-      } else {
-        alert("Erro ao enviar avaliação.");
+      } catch (err) {
+        alert("Erro ao enviar avaliação. Verifique a conexão ou tente novamente.");
+        console.error(err);
       }
     });
+
+    function getSelectedValue(id) {
+      const selected = document.querySelector(`#${id} .selected`);
+      return selected ? selected.dataset.value : "";
+    }
   </script>
 
-  <script async defer
+  <!-- Substitua pela sua chave do Google Maps -->
+  <script
+    async
+    defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap">
   </script>
 </body>
 </html>
-
-
