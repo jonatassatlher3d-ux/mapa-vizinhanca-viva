@@ -51,10 +51,6 @@
       transform: translate(-50%, -50%);
       text-shadow: 0 0 3px #000;
     }
-    .estrela {
-      color: gold;
-      font-size: 16px;
-    }
     form label {
       display: block;
       margin-top: 10px;
@@ -122,10 +118,10 @@
         <input type="number" name="tranquilidade" min="1" max="5">
 
         <label>Ideal para crianças</label>
-        <input type="number" name="criancas" min="1" max="5">
+        <input type="number" name="ideal-criancas" min="1" max="5">
 
         <label>Ótimos vizinhos</label>
-        <input type="number" name="vizinhos" min="1" max="5">
+        <input type="number" name="otimos-vizinhos" min="1" max="5">
 
         <label>Deixe seu comentário</label>
         <textarea name="comentario" rows="3"></textarea>
@@ -284,6 +280,47 @@
       });
       return { lat: lat / pontos.length, lng: lng / pontos.length };
     }
+
+    // ETAPA 3 - Envio do formulário
+    document.getElementById("form-avaliacao").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      
+      const form = e.target;
+      const bairro = document.getElementById("nome-bairro").innerText;
+
+      const payload = {
+        bairro,
+        tipo: form.tipo.value,
+        seguranca: parseInt(form.seguranca.value) || 0,
+        ruido: parseInt(form.ruido.value) || 0,
+        limpeza: parseInt(form.limpeza.value) || 0,
+        tranquilidade: parseInt(form.tranquilidade.value) || 0,
+        idealCriancas: parseInt(form["ideal-criancas"].value) || 0,
+        otimosVizinhos: parseInt(form["otimos-vizinhos"].value) || 0,
+        comentario: form.comentario.value.trim()
+      };
+
+      try {
+        const res = await fetch('https://script.google.com/macros/s/AKfycbyw4gv--Bq6qEGpn49lUoINDIkGRmWBuQHNgMYaWYbHMfL-vT5mezCw7u3HCJGZJukSqg/exec', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const json = await res.json();
+        if (json.success) {
+          alert("Avaliação enviada com sucesso!");
+          form.reset();
+        } else {
+          alert("Erro ao enviar avaliação.");
+        }
+      } catch (err) {
+        alert("Erro de rede.");
+        console.error(err);
+      }
+    });
   </script>
 </body>
 </html>
