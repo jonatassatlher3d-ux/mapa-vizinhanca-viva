@@ -8,34 +8,61 @@
     html, body {
       margin: 0; padding: 0; height: 100%;
       font-family: Arial, sans-serif;
-      background: #000; /* evita qualquer flash claro */
+      background: #000;
     }
 
-    /* Mapa sempre ocupando 100% (sem animar largura) */
-    #map {
-      height: 100%;
-      width: 100%;
-    }
+    #map { height: 100%; width: 100%; }
 
-    /* Sidebar como overlay: sem “abrir espaço” no layout */
+    /* Sidebar overlay (sem flash branco) */
     #sidebar {
       position: absolute; right: 0; top: 0;
       width: 300px; height: 100%;
       background-color: #1e1e1e; color: white;
       padding: 20px; box-sizing: border-box; overflow-y: auto;
       z-index: 2;
-      /* animação suave sem mostrar nada por baixo */
       transform: translateX(100%);
       transition: transform 0.25s ease-in-out;
       backface-visibility: hidden;
       will-change: transform;
-      pointer-events: none; /* não clica quando oculto */
+      pointer-events: none;
     }
-    /* Estado aberto */
-    #sidebar.open {
-      transform: translateX(0);
-      pointer-events: auto;
+    #sidebar.open { transform: translateX(0); pointer-events: auto; }
+
+    h2#sidebar-title {
+      margin: 0 0 10px 0;
+      font-size: 20px; /* mesmo tamanho do título anterior */
+      line-height: 1.2;
     }
+
+    .desc {
+      font-size: 13px;
+      color: #ddd;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+    }
+
+    .medias {
+      margin: 10px 0 16px 0;
+      border-top: 1px solid #2a2a2a;
+      border-bottom: 1px solid #2a2a2a;
+      padding: 10px 0;
+    }
+    .media-item {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 6px 0;
+      font-size: 13px;
+    }
+    .media-item .label { color: #bbb; }
+    .media-item .value { color: #fff; font-weight: 600; margin-left: 8px; }
+
+    .stars-inline {
+      display: inline-block;
+      font-size: 14px;
+      color: #666;
+      letter-spacing: 1px;
+    }
+    .stars-inline .on { color: #ffc107; }
+    .stars-inline .off { color: #555; }
 
     label, textarea, button { display: block; margin-top: 10px; width: 100%; box-sizing: border-box; }
     textarea { padding: 5px; border: none; border-radius: 4px; }
@@ -63,7 +90,7 @@
       background:transparent; color:#fff; font-size:12px; font-weight:bold; text-shadow:0 1px 2px rgba(0,0,0,.8);
     }
 
-    /* Estrelas */
+    /* Estrelas (form) */
     .rating-group{ margin-top:8px; }
     .rating-label{ margin-bottom:4px; font-size:14px; color:#fff; }
     .rating{ display:inline-flex; gap:6px; user-select:none; }
@@ -77,9 +104,16 @@
   <div id="map"></div>
 
   <div id="sidebar">
-    <h2>Bairro Selecionado</h2>
-    <div id="bairro-nome">Clique em um bairro</div>
+    <!-- TÍTULO = nome do bairro selecionado -->
+    <h2 id="sidebar-title">Bairro Selecionado</h2>
 
+    <!-- DESCRIÇÃO (Resumo_IA) -->
+    <div id="bairro-desc" class="desc">Clique em um bairro para ver a descrição.</div>
+
+    <!-- RESUMO DAS MÉDIAS -->
+    <div id="resumo-medias" class="medias"></div>
+
+    <!-- FORMULÁRIO -->
     <form id="form-avaliacao" style="display:none;">
       <!-- Segurança -->
       <div class="rating-group" data-name="Seguranca">
@@ -220,6 +254,7 @@
       ov.setMap(map); return ov;
     }
 
+    // Estrelas do formulário
     function setupStarRatings(){
       document.querySelectorAll('.rating-group').forEach(group=>{
         const hidden=group.querySelector('.hidden-input');
@@ -251,17 +286,51 @@
       return true;
     }
 
-    function openSidebar(bairroNome){
-      bairroSelecionado=bairroNome;
-      document.getElementById("bairro-nome").innerText=bairroNome;
-      const sb=document.getElementById("sidebar");
-      document.getElementById("form-avaliacao").style.display="block";
-      sb.classList.add("open"); // slick slide-in
+    function openSidebar(bairro) {
+      bairroSelecionado = bairro.Nome;
+      // Título
+      document.getElementById("sidebar-title").innerText = bairro.Nome || "Bairro";
+      // Descrição
+      document.getElementById("bairro-desc").innerText = (bairro.Resumo_IA || "Sem descrição disponível.");
+      // Resumo das médias
+      const mediasEl = document.getElementById("resumo-medias");
+      const mk = (v)=> isNaN(parseFloat(v)) ? 0 : parseFloat(v);
+      const itens = [
+        { label: "Reputação", val: mk(bairro.ReputacaoComp) },
+        { label: "Segurança", val: mk(bairro.Seguranca) },
+        { label: "Ruído", val: mk(bairro.Ruido) },
+        { label: "Limpeza", val: mk(bairro.Limpeza) },
+        { label: "Tranquilidade", val: mk(bairro.Tranquilidade) },
+        { label: "Ideal p/ crianças", val: mk(bairro.IdealCriancas) },
+        { label: "Ótimos vizinhos", val: mk(bairro.OtimosVizinhos) }
+      ];
+      mediasEl.innerHTML = itens.map(i => `
+        <div class="media-item">
+          <span class="label">${i.label}</span>
+          <span class="value">
+            <span class="stars-inline">${renderStarsInline(i.val)}</span>
+            ${i.val ? i.val.toFixed(1) : "—"}
+          </span>
+        </div>
+      `).join("");
+
+      // Abre painel e mostra form
+      document.getElementById("form-avaliacao").style.display = "block";
+      document.getElementById("sidebar").classList.add("open");
     }
+
     function closeSidebar(){
-      const sb=document.getElementById("sidebar");
       document.getElementById("form-avaliacao").style.display="none";
-      sb.classList.remove("open");
+      document.getElementById("sidebar").classList.remove("open");
+    }
+
+    function renderStarsInline(val){
+      const n = Math.max(0, Math.min(5, Math.round(val || 0)));
+      let html = "";
+      for (let i=1;i<=5;i++){
+        html += `<span class="${i<=n?'on':'off'}">★</span>`;
+      }
+      return html;
     }
 
     function initMap(){
@@ -297,7 +366,7 @@
               const labelText=hasRep?`${bairro.Nome} (${rep.toFixed(1)}⭐)`:bairro.Nome;
               addTextLabel(map,labelPos,labelText);
 
-              poly.addListener("click", ()=> openSidebar(bairro.Nome));
+              poly.addListener("click", ()=> openSidebar(bairro));
             });
             setupStarRatings();
           })
@@ -307,13 +376,14 @@
       if(navigator.geolocation){
         navigator.geolocation.getCurrentPosition(
           pos=>start({lat:pos.coords.latitude,lng:pos.coords.longitude}),
-          ()=>start({lat:-20.3155,lng:-40.3128}) // fallback: Vitória-ES
+          ()=>start({lat:-20.3155,lng:-40.3128}) // fallback
         );
       } else {
         start({lat:-20.3155,lng:-40.3128});
       }
     }
 
+    // Envio do formulário
     document.getElementById("form-avaliacao").addEventListener("submit", async function(e){
       e.preventDefault();
       if(isSubmitting) return;
