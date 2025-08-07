@@ -58,6 +58,21 @@
     button:hover {
       background-color: #218838;
     }
+
+    /* Rótulos sem fundo (apenas texto) */
+    .map-label {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      white-space: nowrap;
+      pointer-events: none;     /* não captura clique */
+      background: transparent;  /* sem fundo */
+      padding: 0;
+      margin: 0;
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8); /* legibilidade no dark */
+    }
   </style>
 </head>
 <body>
@@ -134,91 +149,72 @@
     let bairroSelecionado = "";
 
     const estilosDark = [
-  { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-  {
-    featureType: "administrative.locality",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }]
-  },
-  {
-    featureType: "poi",
-    stylers: [{ visibility: "off" }] // remove ícones e nomes de pontos de interesse
-  },
-  {
-    featureType: "poi.business",
-    stylers: [{ visibility: "off" }] // remove negócios/comércios
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry",
-    stylers: [{ color: "#263c3f" }]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#6b9a76" }]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [{ color: "#38414e" }]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#212a37" }]
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#9ca5b3" }]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [{ color: "#746855" }]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#1f2835" }]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#f3d19c" }]
-  },
-  {
-    featureType: "transit",
-    elementType: "geometry",
-    stylers: [{ color: "#2f3948" }]
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [{ color: "#17263c" }]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#515c6d" }]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#17263c" }]
-  }
-];
+      { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+      { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+      { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+      { featureType: "poi", stylers: [{ visibility: "off" }] },
+      { featureType: "poi.business", stylers: [{ visibility: "off" }] },
+      { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
+      { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
+      { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+      { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
+      { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
+      { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
+      { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
+      { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f3948" }] },
+      { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+      { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
+      { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] }
+    ];
 
+    function getCorByReputacao(rep) {
+      if (isNaN(rep)) return '#ffffff';
+      if (rep >= 4.5) return '#4caf50';
+      if (rep >= 3.5) return '#2196f3';
+      if (rep >= 2.5) return '#ffeb3b';
+      if (rep >= 1.5) return '#ff9800';
+      return '#f44336';
+    }
+
+    // Calcula “centro” simples pelo média das coordenadas do path
+    function getPolygonCenter(path) {
+      let lat = 0, lng = 0;
+      path.forEach(p => { lat += p.lat; lng += p.lng; });
+      return { lat: lat / path.length, lng: lng / path.length };
+    }
+
+    // OverlayView para rótulos de texto sem fundo
+    function addTextLabel(map, position, text) {
+      const div = document.createElement('div');
+      div.className = 'map-label';
+      div.textContent = text;
+
+      const overlay = new google.maps.OverlayView();
+      overlay.onAdd = function() {
+        const pane = this.getPanes().overlayLayer;
+        pane.appendChild(div);
+      };
+      overlay.draw = function() {
+        const proj = this.getProjection();
+        if (!proj) return;
+        const point = proj.fromLatLngToDivPixel(new google.maps.LatLng(position.lat, position.lng));
+        if (point) {
+          div.style.left = point.x + 'px';
+          div.style.top  = point.y + 'px';
+        }
+      };
+      overlay.onRemove = function() {
+        if (div.parentNode) div.parentNode.removeChild(div);
+      };
+      overlay.setMap(map);
+      return overlay;
+    }
 
     function initMap() {
       navigator.geolocation.getCurrentPosition(pos => {
-        const userLocation = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude
-        };
+        const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
 
         map = new google.maps.Map(document.getElementById("map"), {
           center: userLocation,
@@ -238,33 +234,41 @@
           .then(resp => resp.json())
           .then(data => {
             data.forEach(bairro => {
-              if (bairro.Poligono) {
-                const path = bairro.Poligono
-                  .split(";")
-                  .map(p => {
-                    const [lat, lng] = p.trim().split(",").map(Number);
-                    return { lat, lng };
-                  });
+              if (!bairro.Poligono) return;
 
-                const polygon = new google.maps.Polygon({
-                  paths: path,
-                  strokeColor: "#FF0000",
-                  strokeOpacity: 0.8,
-                  strokeWeight: 2,
-                  fillColor: "#FF0000",
-                  fillOpacity: 0.35,
+              const path = bairro.Poligono
+                .split(";")
+                .map(p => {
+                  const [lat, lng] = p.trim().split(",").map(Number);
+                  return { lat, lng };
                 });
 
-                polygon.setMap(map);
+              const rep = parseFloat(bairro.ReputacaoComp);
+              const hasRep = !isNaN(rep) && rep > 0;
+              const cor = hasRep ? getCorByReputacao(rep) : '#ffffff';
 
-                polygon.addListener("click", () => {
-                  bairroSelecionado = bairro.Nome;
-                  document.getElementById("bairro-nome").innerText = bairro.Nome;
-                  document.getElementById("sidebar").style.display = "block";
-                  document.getElementById("form-avaliacao").style.display = "block";
-                  document.getElementById("map").style.width = "calc(100% - 300px)";
-                });
-              }
+              const polygon = new google.maps.Polygon({
+                paths: path,
+                strokeColor: cor,
+                strokeOpacity: 0.9,
+                strokeWeight: 2,
+                fillColor: cor,
+                fillOpacity: hasRep ? 0.35 : 0.0
+              });
+              polygon.setMap(map);
+
+              // rótulo puro texto (sem fundo)
+              const labelPos = getPolygonCenter(path);
+              const labelText = hasRep ? `${bairro.Nome} (${rep.toFixed(1)}⭐)` : bairro.Nome;
+              addTextLabel(map, labelPos, labelText);
+
+              polygon.addListener("click", () => {
+                bairroSelecionado = bairro.Nome;
+                document.getElementById("bairro-nome").innerText = bairro.Nome;
+                document.getElementById("sidebar").style.display = "block";
+                document.getElementById("form-avaliacao").style.display = "block";
+                document.getElementById("map").style.width = "calc(100% - 300px)";
+              });
             });
           });
       }, () => {
@@ -303,11 +307,6 @@
     });
   </script>
 
-  <script
-    async
-    defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"
-  ></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"></script>
 </body>
 </html>
-
