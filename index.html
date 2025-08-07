@@ -5,48 +5,232 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mapa Vizinhança Viva</title>
   <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+
     #map {
-      height: 100vh;
+      height: 100%;
+      width: calc(100% - 300px);
+      float: left;
+    }
+
+    #sidebar {
+      width: 300px;
+      height: 100%;
+      float: right;
+      background-color: #1e1e1e;
+      color: white;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    label, input, select, textarea, button {
+      display: block;
+      margin-top: 10px;
       width: 100%;
+      box-sizing: border-box;
+    }
+
+    input, select, textarea {
+      padding: 5px;
+      border: none;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: #28a745;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #218838;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
+  <div id="sidebar">
+    <h2>Bairro Selecionado</h2>
+    <div id="bairro-nome">Clique em um bairro</div>
+
+    <form id="form-avaliacao" style="display: none;">
+      <label for="Seguranca">Segurança</label>
+      <select name="Seguranca" required>
+        <option value="">Selecione</option>
+        <option value="1">1 - Péssimo</option>
+        <option value="2">2 - Ruim</option>
+        <option value="3">3 - Médio</option>
+        <option value="4">4 - Bom</option>
+        <option value="5">5 - Excelente</option>
+      </select>
+
+      <label for="Ruido">Ruído</label>
+      <select name="Ruido" required>
+        <option value="">Selecione</option>
+        <option value="1">1 - Muito alto</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5 - Muito silencioso</option>
+      </select>
+
+      <label for="Limpeza">Limpeza</label>
+      <select name="Limpeza" required>
+        <option value="">Selecione</option>
+        <option value="1">1 - Muito sujo</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5 - Muito limpo</option>
+      </select>
+
+      <label for="Tranquilidade">Tranquilidade</label>
+      <select name="Tranquilidade" required>
+        <option value="">Selecione</option>
+        <option value="1">1 - Muito agitado</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5 - Muito tranquilo</option>
+      </select>
+
+      <label for="IdealCriancas">Ideal para crianças?</label>
+      <select name="IdealCriancas" required>
+        <option value="">Selecione</option>
+        <option value="Sim">Sim</option>
+        <option value="Não">Não</option>
+      </select>
+
+      <label for="OtimosVizinhos">Ótimos vizinhos?</label>
+      <select name="OtimosVizinhos" required>
+        <option value="">Selecione</option>
+        <option value="Sim">Sim</option>
+        <option value="Não">Não</option>
+      </select>
+
+      <label for="Comentario">Comentário</label>
+      <textarea name="Comentario" rows="3"></textarea>
+
+      <button type="submit">Enviar Avaliação</button>
+    </form>
+  </div>
+
   <script>
     let map;
+    let bairroSelecionado = "";
+
+    const estilosDark = [
+      { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+      { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+      {
+        featureType: "administrative.locality",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#d59563" }]
+      },
+      {
+        featureType: "poi",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#d59563" }]
+      },
+      {
+        featureType: "poi.park",
+        elementType: "geometry",
+        stylers: [{ color: "#263c3f" }]
+      },
+      {
+        featureType: "poi.park",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#6b9a76" }]
+      },
+      {
+        featureType: "road",
+        elementType: "geometry",
+        stylers: [{ color: "#38414e" }]
+      },
+      {
+        featureType: "road",
+        elementType: "geometry.stroke",
+        stylers: [{ color: "#212a37" }]
+      },
+      {
+        featureType: "road",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#9ca5b3" }]
+      },
+      {
+        featureType: "road.highway",
+        elementType: "geometry",
+        stylers: [{ color: "#746855" }]
+      },
+      {
+        featureType: "road.highway",
+        elementType: "geometry.stroke",
+        stylers: [{ color: "#1f2835" }]
+      },
+      {
+        featureType: "road.highway",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#f3d19c" }]
+      },
+      {
+        featureType: "transit",
+        elementType: "geometry",
+        stylers: [{ color: "#2f3948" }]
+      },
+      {
+        featureType: "transit.station",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#d59563" }]
+      },
+      {
+        featureType: "water",
+        elementType: "geometry",
+        stylers: [{ color: "#17263c" }]
+      },
+      {
+        featureType: "water",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#515c6d" }]
+      },
+      {
+        featureType: "water",
+        elementType: "labels.text.stroke",
+        stylers: [{ color: "#17263c" }]
+      }
+    ];
 
     function initMap() {
-      // Centraliza o mapa (ex: Vitória - ES)
       map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: -20.3155, lng: -40.3128 },
         zoom: 13,
+        styles: estilosDark
       });
 
-      // URL do seu Apps Script Web App
       const url = "https://script.google.com/macros/s/AKfycbyMNlBbsq_ZhO5lkxDqjm_pcptNbXOnfztCvHnjo4UDcpd4PLR3wk3zLBDL8JRQFsUTbg/exec?action=getBairros";
 
-      // Busca os dados da aba "Bairros"
       fetch(url)
-        .then(response => {
-          if (!response.ok) throw new Error("Erro na resposta");
-          return response.json();
-        })
+        .then(resp => resp.json())
         .then(data => {
           data.forEach(bairro => {
             if (bairro.Poligono) {
-              // Converte string do polígono para coordenadas
               const path = bairro.Poligono
                 .split(";")
-                .map(coord => coord.trim())
-                .filter(coord => coord.length > 0)
-                .map(coord => {
-                  const [lat, lng] = coord.split(",").map(Number);
+                .map(p => {
+                  const [lat, lng] = p.trim().split(",").map(Number);
                   return { lat, lng };
                 });
 
-              // Desenha o polígono no mapa
               const polygon = new google.maps.Polygon({
                 paths: path,
                 strokeColor: "#FF0000",
@@ -58,24 +242,47 @@
 
               polygon.setMap(map);
 
-              // Opcional: mostrar nome do bairro ao clicar
               polygon.addListener("click", () => {
-                const infoWindow = new google.maps.InfoWindow({
-                  content: `<strong>${bairro.Nome}</strong>`,
-                  position: path[0],
-                });
-                infoWindow.open(map);
+                bairroSelecionado = bairro.Nome;
+                document.getElementById("bairro-nome").innerText = bairro.Nome;
+                document.getElementById("form-avaliacao").style.display = "block";
               });
             }
           });
-        })
-        .catch(error => {
-          console.error("Erro ao carregar os dados dos bairros:", error);
         });
     }
+
+    document.getElementById("form-avaliacao").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const data = {
+        Bairro: bairroSelecionado,
+        Seguranca: formData.get("Seguranca"),
+        Ruido: formData.get("Ruido"),
+        Limpeza: formData.get("Limpeza"),
+        Tranquilidade: formData.get("Tranquilidade"),
+        IdealCriancas: formData.get("IdealCriancas"),
+        OtimosVizinhos: formData.get("OtimosVizinhos"),
+        Comentario: formData.get("Comentario")
+      };
+
+      fetch("https://script.google.com/macros/s/AKfycbyMNlBbsq_ZhO5lkxDqjm_pcptNbXOnfztCvHnjo4UDcpd4PLR3wk3zLBDL8JRQFsUTbg/exec", {
+        method: "POST",
+        body: JSON.stringify(data)
+      })
+        .then(resp => resp.json())
+        .then(resp => {
+          alert("Avaliação enviada com sucesso!");
+          this.reset();
+        })
+        .catch(err => {
+          alert("Erro ao enviar avaliação.");
+          console.error(err);
+        });
+    });
   </script>
 
-  <!-- Substitua SUA_CHAVE_API pelo seu Google Maps API Key -->
   <script
     async
     defer
