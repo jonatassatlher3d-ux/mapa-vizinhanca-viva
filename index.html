@@ -8,19 +8,33 @@
     html, body {
       margin: 0; padding: 0; height: 100%;
       font-family: Arial, sans-serif;
+      background: #000; /* evita qualquer flash claro */
     }
 
+    /* Mapa sempre ocupando 100% (sem animar largura) */
     #map {
       height: 100%;
       width: 100%;
-      transition: width 0.3s ease;
     }
 
+    /* Sidebar como overlay: sem “abrir espaço” no layout */
     #sidebar {
+      position: absolute; right: 0; top: 0;
       width: 300px; height: 100%;
       background-color: #1e1e1e; color: white;
       padding: 20px; box-sizing: border-box; overflow-y: auto;
-      position: absolute; right: 0; top: 0; display: none; z-index: 2;
+      z-index: 2;
+      /* animação suave sem mostrar nada por baixo */
+      transform: translateX(100%);
+      transition: transform 0.25s ease-in-out;
+      backface-visibility: hidden;
+      will-change: transform;
+      pointer-events: none; /* não clica quando oculto */
+    }
+    /* Estado aberto */
+    #sidebar.open {
+      transform: translateX(0);
+      pointer-events: auto;
     }
 
     label, textarea, button { display: block; margin-top: 10px; width: 100%; box-sizing: border-box; }
@@ -188,13 +202,11 @@
       return '#f44336';
     }
 
-    // Centro aproximado do polígono
     function getPolygonCenter(path){
       let lat=0,lng=0; path.forEach(p=>{lat+=p.lat; lng+=p.lng;});
       return {lat:lat/path.length, lng:lng/path.length};
     }
 
-    // OverlayView: rótulo texto puro
     function addTextLabel(map, position, text){
       const div=document.createElement('div'); div.className='map-label'; div.textContent=text;
       const ov=new google.maps.OverlayView();
@@ -208,7 +220,6 @@
       ov.setMap(map); return ov;
     }
 
-    // Estrelas
     function setupStarRatings(){
       document.querySelectorAll('.rating-group').forEach(group=>{
         const hidden=group.querySelector('.hidden-input');
@@ -240,19 +251,27 @@
       return true;
     }
 
+    function openSidebar(bairroNome){
+      bairroSelecionado=bairroNome;
+      document.getElementById("bairro-nome").innerText=bairroNome;
+      const sb=document.getElementById("sidebar");
+      document.getElementById("form-avaliacao").style.display="block";
+      sb.classList.add("open"); // slick slide-in
+    }
+    function closeSidebar(){
+      const sb=document.getElementById("sidebar");
+      document.getElementById("form-avaliacao").style.display="none";
+      sb.classList.remove("open");
+    }
+
     function initMap(){
-      // Geolocalização + estilo dark
       const start = (center)=> {
         map = new google.maps.Map(document.getElementById("map"), {
           center, zoom: 15, styles: estilosDark, streetViewControl:false, mapTypeControl:false
         });
 
-        // Clicar no mapa fecha painel
-        map.addListener("click", ()=>{
-          document.getElementById("sidebar").style.display="none";
-          document.getElementById("form-avaliacao").style.display="none";
-          document.getElementById("map").style.width="100%";
-        });
+        // Fechar ao clicar no mapa
+        map.addListener("click", closeSidebar);
 
         // Carrega polígonos
         fetch(WEBAPP_GET)
@@ -274,19 +293,11 @@
               });
               poly.setMap(map);
 
-              // Rótulo
               const labelPos=getPolygonCenter(path);
               const labelText=hasRep?`${bairro.Nome} (${rep.toFixed(1)}⭐)`:bairro.Nome;
               addTextLabel(map,labelPos,labelText);
 
-              // Clique abre painel
-              poly.addListener("click", ()=>{
-                bairroSelecionado=bairro.Nome;
-                document.getElementById("bairro-nome").innerText=bairro.Nome;
-                document.getElementById("sidebar").style.display="block";
-                document.getElementById("form-avaliacao").style.display="block";
-                document.getElementById("map").style.width="calc(100% - 300px)";
-              });
+              poly.addListener("click", ()=> openSidebar(bairro.Nome));
             });
             setupStarRatings();
           })
@@ -313,8 +324,7 @@
       isSubmitting=true; btn.disabled=true; btn.textContent="Enviando…";
 
       const fd=new FormData(this);
-      const data={};
-      fd.forEach((v,k)=>data[k]=v);
+      const data={}; fd.forEach((v,k)=>data[k]=v);
       data.Bairro=bairroSelecionado;
 
       try{
@@ -324,6 +334,7 @@
         this.reset();
         document.querySelectorAll('.star').forEach(s=>s.classList.remove('active','hover'));
         document.querySelectorAll('.hidden-input').forEach(i=>i.value="");
+        closeSidebar();
       }catch{
         showToast("Erro ao enviar avaliação.","error");
       }finally{
