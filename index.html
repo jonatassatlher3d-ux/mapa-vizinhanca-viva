@@ -15,22 +15,22 @@
     #map {
       height: 100%;
       width: 100%;
-      float: left;
+      transition: width 0.3s;
     }
 
     #sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
       width: 300px;
       height: 100%;
-      position: absolute;
-      right: 0;
-      top: 0;
       background-color: #1e1e1e;
       color: white;
       padding: 20px;
       box-sizing: border-box;
       overflow-y: auto;
       display: none;
-      z-index: 1;
+      z-index: 999;
     }
 
     label, input, select, textarea, button {
@@ -137,27 +137,76 @@
       { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
       { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
       { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-      { featureType: "poi", stylers: [{ visibility: "off" }] },
-      { featureType: "transit", stylers: [{ visibility: "off" }] },
-      { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
-      { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
-      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
-      { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
-      { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
-      { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
-      { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
-      { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
-      { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] }
+      {
+        featureType: "administrative.locality",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#d59563" }]
+      },
+      {
+        featureType: "poi",
+        stylers: [{ visibility: "off" }]
+      },
+      {
+        featureType: "transit",
+        stylers: [{ visibility: "off" }]
+      },
+      {
+        featureType: "road",
+        elementType: "geometry",
+        stylers: [{ color: "#38414e" }]
+      },
+      {
+        featureType: "road",
+        elementType: "geometry.stroke",
+        stylers: [{ color: "#212a37" }]
+      },
+      {
+        featureType: "road",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#9ca5b3" }]
+      },
+      {
+        featureType: "road.highway",
+        elementType: "geometry",
+        stylers: [{ color: "#746855" }]
+      },
+      {
+        featureType: "road.highway",
+        elementType: "geometry.stroke",
+        stylers: [{ color: "#1f2835" }]
+      },
+      {
+        featureType: "road.highway",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#f3d19c" }]
+      },
+      {
+        featureType: "water",
+        elementType: "geometry",
+        stylers: [{ color: "#17263c" }]
+      },
+      {
+        featureType: "water",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#515c6d" }]
+      },
+      {
+        featureType: "water",
+        elementType: "labels.text.stroke",
+        stylers: [{ color: "#17263c" }]
+      }
     ];
 
     function initMap() {
+      const defaultCenter = { lat: -20.3155, lng: -40.3128 };
+
       map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 15,
-        styles: estilosDark,
-        mapTypeControl: false,
-        streetViewControl: false,
+        center: defaultCenter,
+        zoom: 13,
+        styles: estilosDark
       });
 
+      // Tentativa de geolocalização
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           position => {
@@ -166,15 +215,14 @@
               lng: position.coords.longitude
             };
             map.setCenter(userLocation);
+            map.setZoom(15);
           },
-          () => {
-            map.setCenter({ lat: -20.3155, lng: -40.3128 });
-          }
+          () => console.warn("Geolocalização negada ou falhou."),
+          { timeout: 10000 }
         );
-      } else {
-        map.setCenter({ lat: -20.3155, lng: -40.3128 });
       }
 
+      // Fechar painel ao clicar no mapa vazio
       map.addListener("click", () => {
         document.getElementById("sidebar").style.display = "none";
       });
