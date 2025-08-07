@@ -56,56 +56,68 @@
       margin-top: 14px;
     }
 
-    button:hover {
+    button[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    button:hover:not([disabled]) {
       background-color: #218838;
     }
 
-    /* Estrelas */
-    .rating-group {
-      margin-top: 8px;
-    }
-    .rating-label {
-      margin-bottom: 4px;
-      font-size: 14px;
-      color: #fff;
-    }
-    .rating {
-      display: inline-flex;
-      gap: 6px;
-      user-select: none;
-    }
-    .rating .star {
-      font-size: 22px;
-      line-height: 1;
-      cursor: pointer;
-      color: #666;            /* cor estrela “apagada” */
-      transition: transform 0.08s ease, color 0.08s ease;
-    }
-    .rating .star.active,
-    .rating .star.hover {
-      color: #ffc107;         /* dourado */
-    }
-    .rating .star:active {
-      transform: scale(0.92);
-    }
-    .hidden-input {
-      display: none;
+    /* Toast container */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    /* Rótulos sem fundo (apenas texto no mapa) */
+    .toast {
+      padding: 12px 16px;
+      border-radius: 6px;
+      color: white;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideIn 0.3s forwards, fadeOut 0.5s ease forwards 3s;
+    }
+
+    .toast.success { background-color: #28a745; }
+    .toast.error { background-color: #dc3545; }
+
+    @keyframes slideIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeOut {
+      to { opacity: 0; transform: translateY(20px); }
+    }
+
+    /* Rótulos no mapa */
     .map-label {
       position: absolute;
       transform: translate(-50%, -100%);
       white-space: nowrap;
       pointer-events: none;
       background: transparent;
-      padding: 0;
-      margin: 0;
       color: #fff;
       font-size: 12px;
       font-weight: bold;
       text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
+
+    /* Estrelas */
+    .rating-group { margin-top: 8px; }
+    .rating-label { margin-bottom: 4px; font-size: 14px; color: #fff; }
+    .rating { display: inline-flex; gap: 6px; user-select: none; }
+    .rating .star { font-size: 22px; cursor: pointer; color: #666; transition: transform 0.08s ease, color 0.08s ease; }
+    .rating .star.active, .rating .star.hover { color: #ffc107; }
+    .rating .star:active { transform: scale(0.92); }
+    .hidden-input { display: none; }
   </style>
 </head>
 <body>
@@ -120,7 +132,7 @@
       <div class="rating-group" data-name="Seguranca">
         <div class="rating-label">Segurança</div>
         <input class="hidden-input" type="hidden" name="Seguranca" />
-        <div class="rating" role="radiogroup" aria-label="Segurança">
+        <div class="rating" role="radiogroup">
           <span class="star" data-value="1">★</span>
           <span class="star" data-value="2">★</span>
           <span class="star" data-value="3">★</span>
@@ -133,7 +145,7 @@
       <div class="rating-group" data-name="Ruido">
         <div class="rating-label">Ruído</div>
         <input class="hidden-input" type="hidden" name="Ruido" />
-        <div class="rating" role="radiogroup" aria-label="Ruído">
+        <div class="rating" role="radiogroup">
           <span class="star" data-value="1">★</span>
           <span class="star" data-value="2">★</span>
           <span class="star" data-value="3">★</span>
@@ -146,7 +158,7 @@
       <div class="rating-group" data-name="Limpeza">
         <div class="rating-label">Limpeza</div>
         <input class="hidden-input" type="hidden" name="Limpeza" />
-        <div class="rating" role="radiogroup" aria-label="Limpeza">
+        <div class="rating" role="radiogroup">
           <span class="star" data-value="1">★</span>
           <span class="star" data-value="2">★</span>
           <span class="star" data-value="3">★</span>
@@ -159,7 +171,7 @@
       <div class="rating-group" data-name="Tranquilidade">
         <div class="rating-label">Tranquilidade</div>
         <input class="hidden-input" type="hidden" name="Tranquilidade" />
-        <div class="rating" role="radiogroup" aria-label="Tranquilidade">
+        <div class="rating" role="radiogroup">
           <span class="star" data-value="1">★</span>
           <span class="star" data-value="2">★</span>
           <span class="star" data-value="3">★</span>
@@ -172,7 +184,7 @@
       <div class="rating-group" data-name="IdealCriancas">
         <div class="rating-label">Ideal para crianças</div>
         <input class="hidden-input" type="hidden" name="IdealCriancas" />
-        <div class="rating" role="radiogroup" aria-label="Ideal para crianças">
+        <div class="rating" role="radiogroup">
           <span class="star" data-value="1">★</span>
           <span class="star" data-value="2">★</span>
           <span class="star" data-value="3">★</span>
@@ -185,7 +197,7 @@
       <div class="rating-group" data-name="OtimosVizinhos">
         <div class="rating-label">Ótimos vizinhos</div>
         <input class="hidden-input" type="hidden" name="OtimosVizinhos" />
-        <div class="rating" role="radiogroup" aria-label="Ótimos vizinhos">
+        <div class="rating" role="radiogroup">
           <span class="star" data-value="1">★</span>
           <span class="star" data-value="2">★</span>
           <span class="star" data-value="3">★</span>
@@ -195,87 +207,34 @@
       </div>
 
       <label for="Comentario">Comentário</label>
-      <textarea name="Comentario" rows="3" placeholder="Conte mais sobre sua experiência..."></textarea>
+      <textarea name="Comentario" rows="3"></textarea>
 
-      <button type="submit">Enviar Avaliação</button>
+      <button id="submit-btn" type="submit">Enviar Avaliação</button>
     </form>
   </div>
+
+  <!-- Container de Toast -->
+  <div id="toast-container"></div>
 
   <script>
     let map;
     let bairroSelecionado = "";
+    let isSubmitting = false;
 
-    const estilosDark = [
-      { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-      { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-      { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-      { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-      { featureType: "poi", stylers: [{ visibility: "off" }] },
-      { featureType: "poi.business", stylers: [{ visibility: "off" }] },
-      { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
-      { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
-      { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
-      { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
-      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
-      { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
-      { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
-      { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
-      { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f3948" }] },
-      { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
-      { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
-      { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] }
-    ];
-
-    function getCorByReputacao(rep) {
-      if (isNaN(rep)) return '#ffffff';
-      if (rep >= 4.5) return '#4caf50';
-      if (rep >= 3.5) return '#2196f3';
-      if (rep >= 2.5) return '#ffeb3b';
-      if (rep >= 1.5) return '#ff9800';
-      return '#f44336';
+    function showToast(msg, type = "success") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = `toast ${type}`;
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
     }
 
-    // Centro aproximado do polígono (média simples)
-    function getPolygonCenter(path) {
-      let lat = 0, lng = 0;
-      path.forEach(p => { lat += p.lat; lng += p.lng; });
-      return { lat: lat / path.length, lng: lng / path.length };
-    }
-
-    // OverlayView para rótulos de texto sem fundo
-    function addTextLabel(map, position, text) {
-      const div = document.createElement('div');
-      div.className = 'map-label';
-      div.textContent = text;
-
-      const overlay = new google.maps.OverlayView();
-      overlay.onAdd = function() {
-        const pane = this.getPanes().overlayLayer;
-        pane.appendChild(div);
-      };
-      overlay.draw = function() {
-        const proj = this.getProjection();
-        if (!proj) return;
-        const point = proj.fromLatLngToDivPixel(new google.maps.LatLng(position.lat, position.lng));
-        if (point) {
-          div.style.left = point.x + 'px';
-          div.style.top  = point.y + 'px';
-        }
-      };
-      overlay.onRemove = function() {
-        if (div.parentNode) div.parentNode.removeChild(div);
-      };
-      overlay.setMap(map);
-      return overlay;
-    }
-
-    // ---- Estrelas: lógica de seleção/hover e sincronização com <input hidden> ----
     function setupStarRatings() {
       document.querySelectorAll('.rating-group').forEach(group => {
         const hiddenInput = group.querySelector('.hidden-input');
         const stars = group.querySelectorAll('.star');
-        let current = 0; // valor selecionado
-
+        let current = 0;
         const paint = (val, hover=false) => {
           stars.forEach(star => {
             const v = Number(star.dataset.value);
@@ -283,7 +242,6 @@
             if (!hover) star.classList.remove('hover');
           });
         };
-
         stars.forEach(star => {
           star.addEventListener('mouseenter', () => paint(Number(star.dataset.value), true));
           star.addEventListener('mouseleave', () => paint(current));
@@ -300,124 +258,57 @@
       const requiredNames = ["Seguranca","Ruido","Limpeza","Tranquilidade","IdealCriancas","OtimosVizinhos"];
       for (const name of requiredNames) {
         const val = document.querySelector(`input[name="${name}"]`)?.value;
-        if (!val || isNaN(Number(val)) || Number(val) < 1) {
-          alert(`Selecione de 1 a 5 estrelas para: ${name}.`);
+        if (!val) {
+          showToast(`Selecione as estrelas para: ${name}`, "error");
           return false;
         }
       }
       return true;
     }
 
+    document.getElementById("form-avaliacao").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      if (isSubmitting) return;
+      if (!validateStarsRequired()) return;
+      const btn = document.getElementById("submit-btn");
+      const originalText = btn.textContent;
+      isSubmitting = true;
+      btn.disabled = true;
+      btn.textContent = "Enviando…";
+      const formData = new FormData(this);
+      const data = {};
+      formData.forEach((v, k) => data[k] = v);
+      data.Bairro = bairroSelecionado;
+      try {
+        const resp = await fetch("https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec", {
+          method: "POST",
+          body: JSON.stringify(data)
+        });
+        await resp.json();
+        showToast("Avaliação enviada com sucesso!", "success");
+        this.reset();
+        document.querySelectorAll('.star').forEach(s => s.classList.remove('active','hover'));
+      } catch {
+        showToast("Erro ao enviar avaliação.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        isSubmitting = false;
+      }
+    });
+
     function initMap() {
       navigator.geolocation.getCurrentPosition(pos => {
-        const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-
         map = new google.maps.Map(document.getElementById("map"), {
-          center: userLocation,
+          center: { lat: pos.coords.latitude, lng: pos.coords.longitude },
           zoom: 15,
-          styles: estilosDark
+          styles: [{ featureType: "poi", stylers: [{ visibility: "off" }] }]
         });
-
-        // Clicar fora dos polígonos fecha o painel
-        map.addListener("click", () => {
-          document.getElementById("sidebar").style.display = "none";
-          document.getElementById("form-avaliacao").style.display = "none";
-          document.getElementById("map").style.width = "100%";
-        });
-
-        const url = "https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec?action=getBairros";
-
-        fetch(url)
-          .then(resp => resp.json())
-          .then(data => {
-            data.forEach(bairro => {
-              if (!bairro.Poligono) return;
-
-              const path = bairro.Poligono
-                .split(";")
-                .map(p => {
-                  const [lat, lng] = p.trim().split(",").map(Number);
-                  return { lat, lng };
-                });
-
-              const rep = parseFloat(bairro.ReputacaoComp);
-              const hasRep = !isNaN(rep) && rep > 0;
-              const cor = hasRep ? getCorByReputacao(rep) : '#ffffff';
-
-              const polygon = new google.maps.Polygon({
-                paths: path,
-                strokeColor: cor,
-                strokeOpacity: 0.9,
-                strokeWeight: 2,
-                fillColor: cor,
-                fillOpacity: hasRep ? 0.35 : 0.0
-              });
-              polygon.setMap(map);
-
-              // Rótulo “Nome (X.X⭐)” ou apenas Nome
-              const labelPos = getPolygonCenter(path);
-              const labelText = hasRep ? `${bairro.Nome} (${rep.toFixed(1)}⭐)` : bairro.Nome;
-              addTextLabel(map, labelPos, labelText);
-
-              // Clique no polígono abre painel
-              polygon.addListener("click", () => {
-                bairroSelecionado = bairro.Nome;
-                document.getElementById("bairro-nome").innerText = bairro.Nome;
-                document.getElementById("sidebar").style.display = "block";
-                document.getElementById("form-avaliacao").style.display = "block";
-                document.getElementById("map").style.width = "calc(100% - 300px)";
-              });
-            });
-
-            // Inicializa interações das estrelas após o DOM estar pronto
-            setupStarRatings();
-          });
-      }, () => {
-        alert("Não foi possível obter sua localização.");
+        setupStarRatings();
       });
     }
-
-    // Envio do formulário
-    document.getElementById("form-avaliacao").addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      if (!validateStarsRequired()) return;
-
-      const formData = new FormData(this);
-      const data = {
-        Bairro: bairroSelecionado,
-        Seguranca: formData.get("Seguranca"),
-        Ruido: formData.get("Ruido"),
-        Limpeza: formData.get("Limpeza"),
-        Tranquilidade: formData.get("Tranquilidade"),
-        IdealCriancas: formData.get("IdealCriancas"),
-        OtimosVizinhos: formData.get("OtimosVizinhos"),
-        Comentario: formData.get("Comentario")
-      };
-
-      fetch("https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec", {
-        method: "POST",
-        body: JSON.stringify(data)
-      })
-        .then(resp => resp.json())
-        .then(resp => {
-          alert("Avaliação enviada com sucesso!");
-          this.reset();
-          // Limpa visuais das estrelas após reset
-          document.querySelectorAll('.rating-group').forEach(group => {
-            group.querySelectorAll('.star').forEach(s => {
-              s.classList.remove('active','hover');
-            });
-          });
-        })
-        .catch(err => {
-          alert("Erro ao enviar avaliação.");
-          console.error(err);
-        });
-    });
   </script>
 
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"></script>
 </body>
 </html>
