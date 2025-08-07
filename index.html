@@ -192,8 +192,8 @@
 
                 polygon.setMap(map);
 
-                polygon.addListener("click", (event) => {
-                  event.stopPropagation();
+                polygon.addListener("click", (e) => {
+  e.stopPropagation();
                   bairroSelecionado = bairro.Nome;
                   document.getElementById("bairro-nome").innerText = bairro.Nome;
                   document.getElementById("sidebar").style.display = "block";
@@ -246,3 +246,4 @@
   </script>
 </body>
 </html>
+
