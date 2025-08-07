@@ -1,127 +1,69 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <title>Mapa Vizinhança Viva - Bairros</title>
+  <meta charset="UTF-8">
+  <title>Avaliação de Bairros</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    * { box-sizing: border-box; }
-    body, html {
-      margin: 0; padding: 0; height: 100%;
-      font-family: Arial, sans-serif;
-      overflow: hidden;
-    }
-    #container {
-      position: relative;
+    html, body {
       height: 100%;
-      width: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
     }
     #map {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
       height: 100%;
-      z-index: 1;
+      width: 100%;
     }
-    #painel {
+    #sidebar {
       position: absolute;
       top: 0;
       right: 0;
-      width: 340px;
+      width: 300px;
+      max-width: 80%;
       height: 100%;
-      background: #1e1e1e;
-      color: #fff;
-      padding: 20px;
+      background: #fff;
       overflow-y: auto;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-      z-index: 2;
+      padding: 20px;
+      display: none;
+      z-index: 999;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.3);
     }
-    #painel.aberto {
-      transform: translateX(0%);
+    #formulario select, #formulario textarea, #formulario button {
+      width: 100%;
+      margin-bottom: 10px;
     }
-    .map-label {
-      position: absolute;
-      background-color: transparent;
-      color: #ffffff;
+    .polygon-label {
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 2px 5px;
+      border-radius: 4px;
       font-size: 12px;
-      font-weight: bold;
-      white-space: nowrap;
-      pointer-events: none;
-      transform: translate(-50%, -50%);
-      text-shadow: 0 0 3px #000;
-    }
-    form label {
-      display: block;
-      margin-top: 10px;
-    }
-    form input[type="number"],
-    form textarea,
-    form select {
-      width: 100%;
-      padding: 5px;
-      margin-top: 5px;
-      background: #333;
-      border: none;
-      color: #fff;
-    }
-    form button {
-      margin-top: 15px;
-      padding: 10px;
-      width: 100%;
-      background: #4caf50;
-      border: none;
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
+      text-align: center;
     }
   </style>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
 </head>
 <body>
-  <div id="container">
-    <div id="map"></div>
-    <div id="painel">
-      <h2 id="nome-bairro">Selecione um bairro</h2>
-      <p id="descricao-bairro">Descrição do bairro aqui.</p>
-      <p><strong>Segurança:</strong> <span id="seguranca"></span> ⭐</p>
-      <p><strong>Ruído:</strong> <span id="ruido"></span> ⭐</p>
-      <p><strong>Limpeza:</strong> <span id="limpeza"></span> ⭐</p>
-      <p><strong>Tranquilidade:</strong> <span id="tranquilidade"></span> ⭐</p>
-      <p><strong>Ideal para crianças:</strong> <span id="criancas"></span> ⭐</p>
-      <p><strong>Ótimos vizinhos:</strong> <span id="vizinhos"></span> ⭐</p>
-      <p><strong>Média geral:</strong> <span id="media-geral"></span> ⭐</p>
-      <h3>Comentários</h3>
-      <ul id="comentarios"></ul>
-      <h3>Avalie este bairro</h3>
-      <form id="form-avaliacao">
-        <label>Morador / Visitante</label>
-        <select name="tipo">
-          <option value="morador">Morador</option>
-          <option value="visitante">Visitante</option>
-        </select>
-        <label>Segurança</label>
-        <input type="number" name="seguranca" min="1" max="5">
-        <label>Ruído</label>
-        <input type="number" name="ruido" min="1" max="5">
-        <label>Limpeza</label>
-        <input type="number" name="limpeza" min="1" max="5">
-        <label>Tranquilidade</label>
-        <input type="number" name="tranquilidade" min="1" max="5">
-        <label>Ideal para crianças</label>
-        <input type="number" name="ideal-criancas" min="1" max="5">
-        <label>Ótimos vizinhos</label>
-        <input type="number" name="otimos-vizinhos" min="1" max="5">
-        <label>Deixe seu comentário</label>
-        <textarea name="comentario" rows="3"></textarea>
-        <button type="submit">Enviar</button>
-      </form>
-    </div>
+  <div id="map"></div>
+  <div id="sidebar">
+    <h2 id="bairro-nome"></h2>
+    <p id="bairro-descricao"></p>
+    <div id="bairro-detalhes"></div>
+    <h3>Deixe sua avaliação</h3>
+    <form id="formulario">
+      <select id="seguranca"><option disabled selected>Segurança</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      <select id="ruido"><option disabled selected>Ruído</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      <select id="limpeza"><option disabled selected>Limpeza</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      <select id="tranquilidade"><option disabled selected>Tranquilidade</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      <select id="criancas"><option disabled selected>Ideal para crianças</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      <select id="vizinhos"><option disabled selected>Ótimos vizinhos</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      <textarea id="comentario" placeholder="Deixe seu comentário..."></textarea>
+      <button type="submit">Enviar Avaliação</button>
+    </form>
   </div>
 
   <script>
-    const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzzKVt7XWu-Q8ZcpKbE7kAIJ4pRjwkv9t2_c56zQKgQseD-I9qKzbtAAoDjJ0yvQx6EmA/exec';
-    const BAIRROS_URL = WEBHOOK_URL + '?action=read';
+    const API_URL = "https://script.google.com/macros/s/AKfycbxJrE7mKdJdMu3mVLUvTg7bvosEP4QBw_R9Jw53qpY4uBqYtoa8eqQHKE8lGo6NgLcBQw/exec";
+    let map, bairros = [];
 
     function getCorByReputacao(rep) {
       if (isNaN(rep)) return '#ffffff';
@@ -132,171 +74,85 @@
       return '#f44336';
     }
 
-    async function fetchJson(url) {
-      const res = await fetch(url);
-      const text = await res.text();
-      try {
-        return JSON.parse(text);
-      } catch {
-        return JSON.parse(JSON.parse(text));
-      }
-    }
-
-    let map;
-    window.initMap = function () {
-      const fallbackCenter = { lat: -19.82, lng: -40.27 };
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          pos => criarMapa({ lat: pos.coords.latitude, lng: pos.coords.longitude }, 15),
-          () => criarMapa(fallbackCenter, 12)
-        );
-      } else {
-        criarMapa(fallbackCenter, 12);
-      }
-    }
-
-    function criarMapa(center, zoom) {
-      map = new google.maps.Map(document.getElementById('map'), {
-        center,
-        zoom,
-        streetViewControl: false,
-        mapTypeControl: false,
-        gestureHandling: 'greedy',
-        styles: [
-          { elementType: "geometry", stylers: [{ color: "#212121" }] },
-          { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-          { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
-          { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
-          { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2c2c2c" }] },
-          { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
-          { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] }
-        ]
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 14,
+        styles: [ { elementType: "labels", stylers: [{ visibility: "off" }] }, { featureType: "road", elementType: "labels", stylers: [{ visibility: "on" }] }, { elementType: "geometry", stylers: [{ color: "#242f3e" }] }, { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] }, { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] }],
+        disableDefaultUI: true
       });
 
-      map.addListener('click', () => {
-        document.getElementById("painel").classList.remove("aberto");
+      navigator.geolocation.getCurrentPosition(pos => {
+        map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       });
 
-      carregarBairros();
-    }
+      fetch(`${API_URL}?action=getBairros`)
+        .then(res => res.json())
+        .then(data => {
+          bairros = data;
+          data.forEach(bairro => {
+            if (!bairro.Poligono) return;
 
-    async function carregarBairros() {
-      const bairros = await fetchJson(BAIRROS_URL);
-      bairros.forEach(b => {
-        const coordsText = b.Poligono || '';
-        if (!coordsText) return;
+            const path = JSON.parse(bairro.Poligono);
+            const reputacao = parseFloat(bairro.ReputacaoComp);
+            const cor = getCorByReputacao(reputacao);
+            const poligono = new google.maps.Polygon({
+              paths: path,
+              strokeColor: cor,
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              fillColor: reputacao === 0 ? "#ffffff" : cor,
+              fillOpacity: reputacao === 0 ? 0.0 : 0.3,
+              map
+            });
 
-        const coordPairs = coordsText.split(';').map(p => {
-          const [lat, lng] = p.trim().split(',').map(Number);
-          return { lat, lng };
-        }).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+            const centro = path[0];
+            const label = new google.maps.InfoWindow({
+              content: `<div class="polygon-label">${bairro.Nome} (${reputacao.toFixed(1)}⭐)</div>`,
+              position: centro
+            });
+            label.open(map);
 
-        if (coordPairs.length < 3) return;
+            poligono.addListener("click", () => {
+              document.getElementById("sidebar").style.display = "block";
+              document.getElementById("bairro-nome").innerText = bairro.Nome;
+              document.getElementById("bairro-descricao").innerText = bairro.Resumo_IA;
+              document.getElementById("bairro-detalhes").innerHTML = `
+                Segurança: ${bairro.Seguranca}⭐<br>
+                Ruído: ${bairro.Ruido}⭐<br>
+                Limpeza: ${bairro.Limpeza}⭐<br>
+                Tranquilidade: ${bairro.Tranquilidade}⭐<br>
+                Ideal para crianças: ${bairro.IdealCriancas}⭐<br>
+                Ótimos vizinhos: ${bairro.OtimosVizinhos}⭐<br><br>
+                <b>Comentários:</b><br>${bairro.Comentarios.replace(/\n/g, '<br>')}
+              `;
 
-        const reputacao = parseFloat(b.ReputacaoComp);
-        const cor = getCorByReputacao(reputacao);
-
-        const poligono = new google.maps.Polygon({
-          paths: coordPairs,
-          strokeColor: cor,
-          strokeOpacity: 1,
-          strokeWeight: 2,
-          fillColor: cor,
-          fillOpacity: isNaN(reputacao) ? 0 : 0.2,
-          map: map
-        });
-
-        const centro = calcularCentroide(coordPairs);
-        const texto = `${b.Nome} (${isNaN(reputacao) ? '0.0' : reputacao.toFixed(1)}⭐)`;
-        const div = document.createElement('div');
-        div.className = 'map-label';
-        div.textContent = texto;
-
-        const label = new google.maps.OverlayView();
-        label.onAdd = function () {
-          this.getPanes().overlayLayer.appendChild(div);
-        };
-        label.draw = function () {
-          const proj = this.getProjection();
-          const pos = proj.fromLatLngToDivPixel(new google.maps.LatLng(centro.lat, centro.lng));
-          div.style.left = pos.x + 'px';
-          div.style.top = pos.y + 'px';
-        };
-        label.setMap(map);
-
-        poligono.addListener('click', (event) => {
-          event.stop();
-          const painel = document.getElementById("painel");
-          painel.classList.add("aberto");
-
-          document.getElementById("nome-bairro").innerText = b.Nome;
-          document.getElementById("descricao-bairro").innerText = b.Resumo_IA || "Sem descrição";
-          document.getElementById("seguranca").innerText = b.Segurança || '0';
-          document.getElementById("ruido").innerText = b.Ruído || '0';
-          document.getElementById("limpeza").innerText = b.Limpeza || '0';
-          document.getElementById("tranquilidade").innerText = b.Tranquilidade || '0';
-          document.getElementById("criancas").innerText = b["Ideal para crianças"] || '0';
-          document.getElementById("vizinhos").innerText = b["Ótimos vizinhos"] || '0';
-          document.getElementById("media-geral").innerText = isNaN(reputacao) ? '0.0' : reputacao.toFixed(1);
-
-          const lista = document.getElementById("comentarios");
-          lista.innerHTML = '';
-          (b.Comentarios || '').split('|').forEach(c => {
-            const li = document.createElement('li');
-            li.textContent = c;
-            lista.appendChild(li);
+              document.getElementById("formulario").onsubmit = function (e) {
+                e.preventDefault();
+                fetch(API_URL, {
+                  method: "POST",
+                  body: JSON.stringify({
+                    action: "enviarAvaliacao",
+                    Bairro: bairro.Nome,
+                    Seguranca: +document.getElementById("seguranca").value,
+                    Ruido: +document.getElementById("ruido").value,
+                    Limpeza: +document.getElementById("limpeza").value,
+                    Tranquilidade: +document.getElementById("tranquilidade").value,
+                    IdealCriancas: +document.getElementById("criancas").value,
+                    OtimosVizinhos: +document.getElementById("vizinhos").value,
+                    Comentario: document.getElementById("comentario").value
+                  }),
+                  headers: { "Content-Type": "application/json" }
+                }).then(res => res.json()).then(r => {
+                  alert("Avaliação enviada com sucesso!");
+                  document.getElementById("formulario").reset();
+                });
+              };
+            });
           });
         });
-      });
     }
-
-    function calcularCentroide(pontos) {
-      let lat = 0, lng = 0;
-      pontos.forEach(p => {
-        lat += p.lat;
-        lng += p.lng;
-      });
-      return { lat: lat / pontos.length, lng: lng / pontos.length };
-    }
-
-    document.getElementById("form-avaliacao").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      const form = e.target;
-      const bairro = document.getElementById("nome-bairro").innerText;
-
-      const payload = {
-        bairro,
-        tipo: form.tipo.value,
-        seguranca: parseInt(form.seguranca.value) || 0,
-        ruido: parseInt(form.ruido.value) || 0,
-        limpeza: parseInt(form.limpeza.value) || 0,
-        tranquilidade: parseInt(form.tranquilidade.value) || 0,
-        idealCriancas: parseInt(form["ideal-criancas"].value) || 0,
-        otimosVizinhos: parseInt(form["otimos-vizinhos"].value) || 0,
-        comentario: form.comentario.value.trim()
-      };
-
-      try {
-        const res = await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-        const json = await res.json();
-        if (json.success) {
-          alert("Avaliação enviada com sucesso!");
-          form.reset();
-        } else {
-          alert("Erro ao enviar avaliação.");
-        }
-      } catch (err) {
-        alert("Erro de rede.");
-        console.error(err);
-      }
-    });
   </script>
+
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap" async defer></script>
 </body>
 </html>
-
-
