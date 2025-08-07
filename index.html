@@ -9,7 +9,6 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      overflow: hidden;
       font-family: Arial, sans-serif;
     }
 
@@ -31,7 +30,7 @@
       right: 0;
       top: 0;
       display: none;
-      z-index: 2;
+      z-index: 1;
     }
 
     label, input, select, textarea, button {
@@ -144,8 +143,14 @@
         stylers: [{ color: "#d59563" }]
       },
       {
-        featureType: "poi",
-        stylers: [{ visibility: "off" }]
+        featureType: "poi.park",
+        elementType: "geometry",
+        stylers: [{ color: "#263c3f" }]
+      },
+      {
+        featureType: "poi.park",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#6b9a76" }]
       },
       {
         featureType: "road",
@@ -199,79 +204,63 @@
       }
     ];
 
-    function abrirPainel() {
-      document.getElementById("sidebar").style.display = "block";
-      document.getElementById("map").style.width = "calc(100% - 300px)";
-    }
-
-    function fecharPainel() {
-      document.getElementById("sidebar").style.display = "none";
-      document.getElementById("map").style.width = "100%";
-      document.getElementById("form-avaliacao").style.display = "none";
-      bairroSelecionado = "";
-    }
-
     function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 13,
-        center: { lat: -20.3155, lng: -40.3128 }, // fallback
-        styles: estilosDark,
-        streetViewControl: false,
-        mapTypeControl: false
-      });
+      navigator.geolocation.getCurrentPosition(pos => {
+        const userLocation = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        };
 
-      // Tenta usar localização do usuário
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const pos = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            };
-            map.setCenter(pos);
-          },
-          () => console.warn("Geolocalização negada.")
-        );
-      }
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: userLocation,
+          zoom: 15,
+          styles: estilosDark
+        });
 
-      map.addListener("click", () => {
-        fecharPainel();
-      });
+        map.addListener("click", () => {
+          document.getElementById("sidebar").style.display = "none";
+          document.getElementById("form-avaliacao").style.display = "none";
+          document.getElementById("map").style.width = "100%";
+        });
 
-      const url = "https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec?action=getBairros";
+        const url = "https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec?action=getBairros";
 
-      fetch(url)
-        .then(resp => resp.json())
-        .then(data => {
-          data.forEach(bairro => {
-            if (bairro.Poligono) {
-              const path = bairro.Poligono
-                .split(";")
-                .map(p => {
-                  const [lat, lng] = p.trim().split(",").map(Number);
-                  return { lat, lng };
+        fetch(url)
+          .then(resp => resp.json())
+          .then(data => {
+            data.forEach(bairro => {
+              if (bairro.Poligono) {
+                const path = bairro.Poligono
+                  .split(";")
+                  .map(p => {
+                    const [lat, lng] = p.trim().split(",").map(Number);
+                    return { lat, lng };
+                  });
+
+                const polygon = new google.maps.Polygon({
+                  paths: path,
+                  strokeColor: "#FF0000",
+                  strokeOpacity: 0.8,
+                  strokeWeight: 2,
+                  fillColor: "#FF0000",
+                  fillOpacity: 0.35,
                 });
 
-              const polygon = new google.maps.Polygon({
-                paths: path,
-                strokeColor: "#FF0000",
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: "#FF0000",
-                fillOpacity: 0.35,
-              });
+                polygon.setMap(map);
 
-              polygon.setMap(map);
-
-              polygon.addListener("click", () => {
-                bairroSelecionado = bairro.Nome;
-                document.getElementById("bairro-nome").innerText = bairro.Nome;
-                document.getElementById("form-avaliacao").style.display = "block";
-                abrirPainel();
-              });
-            }
+                polygon.addListener("click", () => {
+                  bairroSelecionado = bairro.Nome;
+                  document.getElementById("bairro-nome").innerText = bairro.Nome;
+                  document.getElementById("sidebar").style.display = "block";
+                  document.getElementById("form-avaliacao").style.display = "block";
+                  document.getElementById("map").style.width = "calc(100% - 300px)";
+                });
+              }
+            });
           });
-        });
+      }, () => {
+        alert("Não foi possível obter sua localização.");
+      });
     }
 
     document.getElementById("form-avaliacao").addEventListener("submit", function (e) {
@@ -305,8 +294,10 @@
     });
   </script>
 
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap">
-  </script>
+  <script
+    async
+    defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"
+  ></script>
 </body>
 </html>
