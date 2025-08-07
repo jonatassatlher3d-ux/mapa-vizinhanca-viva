@@ -2,302 +2,263 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mapa Vizinhança Viva</title>
   <style>
-    body, html {
-      margin: 0; padding: 0; height: 100%; font-family: Arial, sans-serif;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
     }
+
+    #container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
     #map {
+      flex: 1;
       height: 100%;
-      width: calc(100% - 300px);
-      float: left;
     }
+
     #sidebar {
       width: 300px;
-      height: 100%;
-      float: right;
-      background-color: #1e1e1e;
-      color: white;
-      padding: 20px;
-      box-sizing: border-box;
+      background-color: #ffffff;
+      border-left: 1px solid #ccc;
+      padding: 16px;
       overflow-y: auto;
-      display: none; /* oculto inicialmente */
+      display: none;
     }
+
     h2 {
       margin-top: 0;
     }
-    label {
-      margin-top: 15px;
+
+    .rating-group {
+      margin-bottom: 12px;
+    }
+
+    .rating-label {
       display: block;
+      margin-bottom: 4px;
       font-weight: bold;
     }
-    .rating-group {
+
+    .rating-options {
       display: flex;
-      justify-content: space-between;
-      margin-top: 5px;
+      gap: 8px;
     }
-    .rating-group input[type="radio"] {
+
+    .rating-options input[type="radio"] {
       display: none;
     }
-    .rating-group label {
-      background-color: #444;
-      padding: 8px 12px;
+
+    .rating-options label {
+      background-color: #eee;
+      padding: 6px 12px;
       border-radius: 4px;
       cursor: pointer;
       user-select: none;
-      flex: 1;
-      text-align: center;
-      margin-right: 5px;
-      transition: background-color 0.3s ease;
     }
-    .rating-group label:last-child {
-      margin-right: 0;
+
+    .rating-options input[type="radio"]:checked + label {
+      background-color: #007bff;
+      color: #fff;
     }
-    .rating-group input[type="radio"]:checked + label {
-      background-color: #28a745;
-      color: white;
-      font-weight: bold;
-    }
+
     textarea {
       width: 100%;
       height: 60px;
-      margin-top: 10px;
-      padding: 6px;
       resize: vertical;
-      border-radius: 4px;
-      border: none;
     }
+
     button {
-      margin-top: 15px;
+      margin-top: 12px;
+      padding: 10px;
       width: 100%;
-      padding: 12px;
       background-color: #28a745;
+      color: white;
       border: none;
       border-radius: 4px;
-      color: white;
       font-size: 16px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
     }
-    button:hover {
-      background-color: #218838;
+
+    button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
-  <div id="map"></div>
-  <div id="sidebar">
-    <h2 id="bairro-nome">Bairro Selecionado</h2>
-    <form id="form-avaliacao">
-      <label>Segurança</label>
-      <div class="rating-group" name="Seguranca">
-        <input type="radio" id="seg1" name="Seguranca" value="1" required/><label for="seg1">1</label>
-        <input type="radio" id="seg2" name="Seguranca" value="2"/><label for="seg2">2</label>
-        <input type="radio" id="seg3" name="Seguranca" value="3"/><label for="seg3">3</label>
-        <input type="radio" id="seg4" name="Seguranca" value="4"/><label for="seg4">4</label>
-        <input type="radio" id="seg5" name="Seguranca" value="5"/><label for="seg5">5</label>
-      </div>
+  <div id="container">
+    <div id="map"></div>
+    <div id="sidebar">
+      <h2 id="bairroNome"></h2>
+      <form id="avaliacaoForm">
+        <div class="rating-group">
+          <span class="rating-label">Segurança:</span>
+          <div class="rating-options">
+            <input type="radio" name="Seguranca" id="seg1" value="1"><label for="seg1">1</label>
+            <input type="radio" name="Seguranca" id="seg2" value="2"><label for="seg2">2</label>
+            <input type="radio" name="Seguranca" id="seg3" value="3"><label for="seg3">3</label>
+            <input type="radio" name="Seguranca" id="seg4" value="4"><label for="seg4">4</label>
+            <input type="radio" name="Seguranca" id="seg5" value="5"><label for="seg5">5</label>
+          </div>
+        </div>
 
-      <label>Ruído</label>
-      <div class="rating-group" name="Ruido">
-        <input type="radio" id="ruido1" name="Ruido" value="1" required/><label for="ruido1">1</label>
-        <input type="radio" id="ruido2" name="Ruido" value="2"/><label for="ruido2">2</label>
-        <input type="radio" id="ruido3" name="Ruido" value="3"/><label for="ruido3">3</label>
-        <input type="radio" id="ruido4" name="Ruido" value="4"/><label for="ruido4">4</label>
-        <input type="radio" id="ruido5" name="Ruido" value="5"/><label for="ruido5">5</label>
-      </div>
+        <div class="rating-group">
+          <span class="rating-label">Ruído:</span>
+          <div class="rating-options">
+            <input type="radio" name="Ruido" id="rui1" value="1"><label for="rui1">1</label>
+            <input type="radio" name="Ruido" id="rui2" value="2"><label for="rui2">2</label>
+            <input type="radio" name="Ruido" id="rui3" value="3"><label for="rui3">3</label>
+            <input type="radio" name="Ruido" id="rui4" value="4"><label for="rui4">4</label>
+            <input type="radio" name="Ruido" id="rui5" value="5"><label for="rui5">5</label>
+          </div>
+        </div>
 
-      <label>Limpeza</label>
-      <div class="rating-group" name="Limpeza">
-        <input type="radio" id="limpeza1" name="Limpeza" value="1" required/><label for="limpeza1">1</label>
-        <input type="radio" id="limpeza2" name="Limpeza" value="2"/><label for="limpeza2">2</label>
-        <input type="radio" id="limpeza3" name="Limpeza" value="3"/><label for="limpeza3">3</label>
-        <input type="radio" id="limpeza4" name="Limpeza" value="4"/><label for="limpeza4">4</label>
-        <input type="radio" id="limpeza5" name="Limpeza" value="5"/><label for="limpeza5">5</label>
-      </div>
+        <div class="rating-group">
+          <span class="rating-label">Limpeza:</span>
+          <div class="rating-options">
+            <input type="radio" name="Limpeza" id="lim1" value="1"><label for="lim1">1</label>
+            <input type="radio" name="Limpeza" id="lim2" value="2"><label for="lim2">2</label>
+            <input type="radio" name="Limpeza" id="lim3" value="3"><label for="lim3">3</label>
+            <input type="radio" name="Limpeza" id="lim4" value="4"><label for="lim4">4</label>
+            <input type="radio" name="Limpeza" id="lim5" value="5"><label for="lim5">5</label>
+          </div>
+        </div>
 
-      <label>Tranquilidade</label>
-      <div class="rating-group" name="Tranquilidade">
-        <input type="radio" id="tranq1" name="Tranquilidade" value="1" required/><label for="tranq1">1</label>
-        <input type="radio" id="tranq2" name="Tranquilidade" value="2"/><label for="tranq2">2</label>
-        <input type="radio" id="tranq3" name="Tranquilidade" value="3"/><label for="tranq3">3</label>
-        <input type="radio" id="tranq4" name="Tranquilidade" value="4"/><label for="tranq4">4</label>
-        <input type="radio" id="tranq5" name="Tranquilidade" value="5"/><label for="tranq5">5</label>
-      </div>
+        <div class="rating-group">
+          <span class="rating-label">Tranquilidade:</span>
+          <div class="rating-options">
+            <input type="radio" name="Tranquilidade" id="tran1" value="1"><label for="tran1">1</label>
+            <input type="radio" name="Tranquilidade" id="tran2" value="2"><label for="tran2">2</label>
+            <input type="radio" name="Tranquilidade" id="tran3" value="3"><label for="tran3">3</label>
+            <input type="radio" name="Tranquilidade" id="tran4" value="4"><label for="tran4">4</label>
+            <input type="radio" name="Tranquilidade" id="tran5" value="5"><label for="tran5">5</label>
+          </div>
+        </div>
 
-      <label>Ideal para crianças</label>
-      <div class="rating-group" name="IdealCriancas">
-        <input type="radio" id="crianca1" name="IdealCriancas" value="1" required/><label for="crianca1">1</label>
-        <input type="radio" id="crianca2" name="IdealCriancas" value="2"/><label for="crianca2">2</label>
-        <input type="radio" id="crianca3" name="IdealCriancas" value="3"/><label for="crianca3">3</label>
-        <input type="radio" id="crianca4" name="IdealCriancas" value="4"/><label for="crianca4">4</label>
-        <input type="radio" id="crianca5" name="IdealCriancas" value="5"/><label for="crianca5">5</label>
-      </div>
+        <div class="rating-group">
+          <span class="rating-label">Ideal para crianças:</span>
+          <div class="rating-options">
+            <input type="radio" name="IdealCriancas" id="cri1" value="1"><label for="cri1">1</label>
+            <input type="radio" name="IdealCriancas" id="cri2" value="2"><label for="cri2">2</label>
+            <input type="radio" name="IdealCriancas" id="cri3" value="3"><label for="cri3">3</label>
+            <input type="radio" name="IdealCriancas" id="cri4" value="4"><label for="cri4">4</label>
+            <input type="radio" name="IdealCriancas" id="cri5" value="5"><label for="cri5">5</label>
+          </div>
+        </div>
 
-      <label>Ótimos vizinhos</label>
-      <div class="rating-group" name="OtimosVizinhos">
-        <input type="radio" id="vizinho1" name="OtimosVizinhos" value="1" required/><label for="vizinho1">1</label>
-        <input type="radio" id="vizinho2" name="OtimosVizinhos" value="2"/><label for="vizinho2">2</label>
-        <input type="radio" id="vizinho3" name="OtimosVizinhos" value="3"/><label for="vizinho3">3</label>
-        <input type="radio" id="vizinho4" name="OtimosVizinhos" value="4"/><label for="vizinho4">4</label>
-        <input type="radio" id="vizinho5" name="OtimosVizinhos" value="5"/><label for="vizinho5">5</label>
-      </div>
+        <div class="rating-group">
+          <span class="rating-label">Ótimos vizinhos:</span>
+          <div class="rating-options">
+            <input type="radio" name="OtimosVizinhos" id="viz1" value="1"><label for="viz1">1</label>
+            <input type="radio" name="OtimosVizinhos" id="viz2" value="2"><label for="viz2">2</label>
+            <input type="radio" name="OtimosVizinhos" id="viz3" value="3"><label for="viz3">3</label>
+            <input type="radio" name="OtimosVizinhos" id="viz4" value="4"><label for="viz4">4</label>
+            <input type="radio" name="OtimosVizinhos" id="viz5" value="5"><label for="viz5">5</label>
+          </div>
+        </div>
 
-      <label for="Comentario">Comentário</label>
-      <textarea name="Comentario" id="Comentario" placeholder="Deixe seu comentário aqui..."></textarea>
+        <div>
+          <label for="Comentario" class="rating-label">Comentário:</label>
+          <textarea name="Comentario" id="Comentario" placeholder="Digite aqui..."></textarea>
+        </div>
 
-      <button type="submit">Enviar Avaliação</button>
-    </form>
+        <button type="submit">Enviar Avaliação</button>
+      </form>
+    </div>
   </div>
 
   <script>
     let map;
-    let bairroSelecionado = "";
-
-    const estilosDark = [
-      { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-      { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-      { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-      { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-      { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-      { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
-      { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
-      { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
-      { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
-      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
-      { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
-      { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
-      { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
-      { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f3948" }] },
-      { featureType: "transit.station", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-      { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
-      { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
-      { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] }
-    ];
-
-    function getCorByReputacao(rep) {
-      if (isNaN(rep) || rep == 0) return '#ffffff00'; // transparente se 0 ou NaN
-      if (rep >= 4.5) return '#4caf50cc';
-      if (rep >= 3.5) return '#2196f3cc';
-      if (rep >= 2.5) return '#ffeb3bcc';
-      if (rep >= 1.5) return '#ff9800cc';
-      return '#f44336cc';
-    }
+    let selectedBairro = "";
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: -20.3155, lng: -40.3128 },
         zoom: 13,
-        styles: estilosDark
+        styles: [ { elementType: "geometry", stylers: [ { color: "#212121" } ] },
+                  { elementType: "labels.icon", stylers: [ { visibility: "off" } ] },
+                  { elementType: "labels.text.fill", stylers: [ { color: "#757575" } ] },
+                  { elementType: "labels.text.stroke", stylers: [ { color: "#212121" } ] },
+                  { featureType: "administrative", elementType: "geometry", stylers: [ { color: "#757575" } ] },
+                  { featureType: "poi", elementType: "geometry", stylers: [ { color: "#2b2b2b" } ] },
+                  { featureType: "road", elementType: "geometry", stylers: [ { color: "#383838" } ] },
+                  { featureType: "water", elementType: "geometry", stylers: [ { color: "#000000" } ] } ]
+      });
+
+      // Fecha o painel ao clicar fora de um polígono
+      map.addListener("click", () => {
+        document.getElementById("sidebar").style.display = "none";
+        selectedBairro = "";
       });
 
       const url = "https://script.google.com/macros/s/AKfycbyMNlBbsq_ZhO5lkxDqjm_pcptNbXOnfztCvHnjo4UDcpd4PLR3wk3zLBDL8JRQFsUTbg/exec?action=getBairros";
 
       fetch(url)
-        .then(resp => resp.json())
+        .then(response => response.json())
         .then(data => {
           data.forEach(bairro => {
-            if (!bairro.Poligono) return;
-
-            const path = bairro.Poligono
-              .split(";")
-              .map(p => p.trim())
-              .filter(p => p.length > 0)
-              .map(p => {
-                const [lat, lng] = p.split(",").map(Number);
+            if (bairro.Poligono) {
+              const path = bairro.Poligono.split(";").map(p => {
+                const [lat, lng] = p.trim().split(",").map(Number);
                 return { lat, lng };
               });
 
-            const cor = getCorByReputacao(parseFloat(bairro.ReputacaoComp));
+              const polygon = new google.maps.Polygon({
+                paths: path,
+                strokeColor: "#00bcd4",
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: "#00bcd4",
+                fillOpacity: 0.35,
+              });
 
-            const polygon = new google.maps.Polygon({
-              paths: path,
-              strokeColor: cor.replace("cc", "ff"),
-              strokeOpacity: 1,
-              strokeWeight: 2,
-              fillColor: cor,
-              fillOpacity: 0.3,
-              map: map
-            });
+              polygon.setMap(map);
 
-            polygon.addListener("click", () => {
-              bairroSelecionado = bairro.Nome;
-              mostrarSidebar(bairro);
-            });
+              polygon.addListener("click", (event) => {
+                selectedBairro = bairro.Nome;
+                document.getElementById("bairroNome").innerText = bairro.Nome;
+                document.getElementById("sidebar").style.display = "block";
+                event.stopPropagation();
+              });
+            }
           });
         });
 
-      // Esconde sidebar se clicar fora dos polígonos
-      map.addListener("click", () => {
-        esconderSidebar();
+      document.getElementById("avaliacaoForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const data = { Bairro: selectedBairro };
+
+        formData.forEach((value, key) => {
+          data[key] = value;
+        });
+
+        fetch("https://script.google.com/macros/s/AKfycbyMNlBbsq_ZhO5lkxDqjm_pcptNbXOnfztCvHnjo4UDcpd4PLR3wk3zLBDL8JRQFsUTbg/exec", {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }).then(() => {
+          alert("Avaliação enviada com sucesso!");
+          e.target.reset();
+          document.getElementById("sidebar").style.display = "none";
+        }).catch(() => {
+          alert("Erro ao enviar a avaliação.");
+        });
       });
     }
-
-    function mostrarSidebar(bairro) {
-      document.getElementById("bairro-nome").innerText = bairro.Nome;
-
-      // Exibe o formulário
-      const sidebar = document.getElementById("sidebar");
-      sidebar.style.display = "block";
-
-      // Limpa formulário
-      const form = document.getElementById("form-avaliacao");
-      form.reset();
-
-      // Armazena dados do bairro no form (se quiser usar hidden inputs ou atributos data)
-      // Por enquanto só armazenamos global bairroSelecionado para envio
-    }
-
-    function esconderSidebar() {
-      const sidebar = document.getElementById("sidebar");
-      sidebar.style.display = "none";
-      bairroSelecionado = "";
-      // Opcional: resetar form
-      document.getElementById("form-avaliacao").reset();
-    }
-
-    document.getElementById("form-avaliacao").addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      if (!bairroSelecionado) {
-        alert("Selecione um bairro antes de enviar a avaliação.");
-        return;
-      }
-
-      const formData = new FormData(this);
-      const data = {
-        Bairro: bairroSelecionado,
-        Seguranca: formData.get("Seguranca"),
-        Ruido: formData.get("Ruido"),
-        Limpeza: formData.get("Limpeza"),
-        Tranquilidade: formData.get("Tranquilidade"),
-        IdealCriancas: formData.get("IdealCriancas"),
-        OtimosVizinhos: formData.get("OtimosVizinhos"),
-        Comentario: formData.get("Comentario") || ""
-      };
-
-      fetch("https://script.google.com/macros/s/AKfycbyMNlBbsq_ZhO5lkxDqjm_pcptNbXOnfztCvHnjo4UDcpd4PLR3wk3zLBDL8JRQFsUTbg/exec", {
-        method: "POST",
-        body: JSON.stringify(data)
-      })
-        .then(resp => resp.json())
-        .then(resp => {
-          alert("Avaliação enviada com sucesso!");
-          this.reset();
-          esconderSidebar();
-        })
-        .catch(err => {
-          alert("Erro ao enviar avaliação.");
-          console.error(err);
-        });
-    });
   </script>
 
-  <script
-    async
-    defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"
-  ></script>
+  <!-- Substitua SUA_CHAVE_API pela sua Google Maps API Key -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap">
+  </script>
 </body>
 </html>
