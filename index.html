@@ -91,10 +91,8 @@
       <p><strong>Ideal para crianças:</strong> <span id="criancas"></span> ⭐</p>
       <p><strong>Ótimos vizinhos:</strong> <span id="vizinhos"></span> ⭐</p>
       <p><strong>Média geral:</strong> <span id="media-geral"></span> ⭐</p>
-
       <h3>Comentários</h3>
       <ul id="comentarios"></ul>
-
       <h3>Avalie este bairro</h3>
       <form id="form-avaliacao">
         <label>Morador / Visitante</label>
@@ -123,40 +121,146 @@
 
   <script>
     const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzg15mXHH3hSbim9rcxcI62EM5W_veBmajYMLZA9KKfpierC5DbGl38lhvPEYYzCSPaig/exec';
+    const BAIRROS_URL = WEBHOOK_URL + '?action=read';
+
+    function getCorByReputacao(rep) {
+      if (isNaN(rep)) return '#ffffff';
+      if (rep >= 4.5) return '#4caf50';
+      if (rep >= 3.5) return '#2196f3';
+      if (rep >= 2.5) return '#ffeb3b';
+      if (rep >= 1.5) return '#ff9800';
+      return '#f44336';
+    }
+
+    async function fetchJson(url) {
+      const res = await fetch(url);
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return JSON.parse(JSON.parse(text));
+      }
+    }
 
     let map;
     window.initMap = function () {
+      const fallbackCenter = { lat: -19.82, lng: -40.27 };
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           pos => criarMapa({ lat: pos.coords.latitude, lng: pos.coords.longitude }, 15),
-          () => criarMapa({ lat: -19.82, lng: -40.27 }, 12)
+          () => criarMapa(fallbackCenter, 12)
         );
       } else {
-        criarMapa({ lat: -19.82, lng: -40.27 }, 12);
+        criarMapa(fallbackCenter, 12);
       }
-    };
+    }
 
     function criarMapa(center, zoom) {
       map = new google.maps.Map(document.getElementById('map'), {
-        center, zoom,
+        center,
+        zoom,
         streetViewControl: false,
         mapTypeControl: false,
         gestureHandling: 'greedy',
-        styles: [/* estilo escuro */]
+        styles: [
+          { elementType: "geometry", stylers: [{ color: "#212121" }] },
+          { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+          { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+          { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+          { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2c2c2c" }] },
+          { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
+          { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] }
+        ]
       });
 
       map.addListener('click', () => {
         document.getElementById("painel").classList.remove("aberto");
       });
 
-      // Aqui você deve carregar os dados da planilha nova (via webhook ou json estático) e desenhar os bairros
-      // Exemplo fictício:
-      // fetch(WEBHOOK_URL + '?get=bairros')...
+      carregarBairros();
     }
 
-    document.getElementById("form-avaliacao").addEventListener("submit", async function (e) {
-      e.preventDefault();
+    async function carregarBairros() {
+      const bairros = await fetchJson(BAIRROS_URL);
+      bairros.forEach(b => {
+        const coordsText = b.Poligono || '';
+        if (!coordsText) return;
 
+        const coordPairs = coordsText.split(';').map(p => {
+          const [lat, lng] = p.trim().split(',').map(Number);
+          return { lat, lng };
+        }).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+
+        if (coordPairs.length < 3) return;
+
+        const reputacao = parseFloat(b.ReputacaoComp);
+        const cor = getCorByReputacao(reputacao);
+
+        const poligono = new google.maps.Polygon({
+          paths: coordPairs,
+          strokeColor: cor,
+          strokeOpacity: 1,
+          strokeWeight: 2,
+          fillColor: cor,
+          fillOpacity: isNaN(reputacao) ? 0 : 0.2,
+          map: map
+        });
+
+        const centro = calcularCentroide(coordPairs);
+        const texto = `${b.Nome} (${isNaN(reputacao) ? '0.0' : reputacao.toFixed(1)}⭐)`;
+        const div = document.createElement('div');
+        div.className = 'map-label';
+        div.textContent = texto;
+
+        const label = new google.maps.OverlayView();
+        label.onAdd = function () {
+          this.getPanes().overlayLayer.appendChild(div);
+        };
+        label.draw = function () {
+          const proj = this.getProjection();
+          const pos = proj.fromLatLngToDivPixel(new google.maps.LatLng(centro.lat, centro.lng));
+          div.style.left = pos.x + 'px';
+          div.style.top = pos.y + 'px';
+        };
+        label.setMap(map);
+
+        poligono.addListener('click', (event) => {
+          event.stop();
+          const painel = document.getElementById("painel");
+          painel.classList.add("aberto");
+
+          document.getElementById("nome-bairro").innerText = b.Nome;
+          document.getElementById("descricao-bairro").innerText = b.Resumo_IA || "Sem descrição";
+          document.getElementById("seguranca").innerText = b.Segurança || '0';
+          document.getElementById("ruido").innerText = b.Ruído || '0';
+          document.getElementById("limpeza").innerText = b.Limpeza || '0';
+          document.getElementById("tranquilidade").innerText = b.Tranquilidade || '0';
+          document.getElementById("criancas").innerText = b["Ideal para crianças"] || '0';
+          document.getElementById("vizinhos").innerText = b["Ótimos vizinhos"] || '0';
+          document.getElementById("media-geral").innerText = isNaN(reputacao) ? '0.0' : reputacao.toFixed(1);
+
+          const lista = document.getElementById("comentarios");
+          lista.innerHTML = '';
+          (b.Comentarios || '').split('|').forEach(c => {
+            const li = document.createElement('li');
+            li.textContent = c;
+            lista.appendChild(li);
+          });
+        });
+      });
+    }
+
+    function calcularCentroide(pontos) {
+      let lat = 0, lng = 0;
+      pontos.forEach(p => {
+        lat += p.lat;
+        lng += p.lng;
+      });
+      return { lat: lat / pontos.length, lng: lng / pontos.length };
+    }
+
+    document.getElementById("form-avaliacao").addEventListener("submit", async function(e) {
+      e.preventDefault();
       const form = e.target;
       const bairro = document.getElementById("nome-bairro").innerText;
 
@@ -176,9 +280,7 @@
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           body: JSON.stringify(payload),
-          headers: {
-            'Content-Type': 'application/json'
-          }
+          headers: { 'Content-Type': 'application/json' }
         });
 
         const json = await res.json();
