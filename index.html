@@ -33,14 +33,14 @@
       z-index: 1;
     }
 
-    label, input, select, textarea, button {
+    label, input, textarea, button {
       display: block;
       margin-top: 10px;
       width: 100%;
       box-sizing: border-box;
     }
 
-    input, select, textarea {
+    textarea {
       padding: 5px;
       border: none;
       border-radius: 4px;
@@ -53,25 +53,58 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      margin-top: 14px;
     }
 
     button:hover {
       background-color: #218838;
     }
 
-    /* Rótulos sem fundo (apenas texto) */
+    /* Estrelas */
+    .rating-group {
+      margin-top: 8px;
+    }
+    .rating-label {
+      margin-bottom: 4px;
+      font-size: 14px;
+      color: #fff;
+    }
+    .rating {
+      display: inline-flex;
+      gap: 6px;
+      user-select: none;
+    }
+    .rating .star {
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      color: #666;            /* cor estrela “apagada” */
+      transition: transform 0.08s ease, color 0.08s ease;
+    }
+    .rating .star.active,
+    .rating .star.hover {
+      color: #ffc107;         /* dourado */
+    }
+    .rating .star:active {
+      transform: scale(0.92);
+    }
+    .hidden-input {
+      display: none;
+    }
+
+    /* Rótulos sem fundo (apenas texto no mapa) */
     .map-label {
       position: absolute;
       transform: translate(-50%, -100%);
       white-space: nowrap;
-      pointer-events: none;     /* não captura clique */
-      background: transparent;  /* sem fundo */
+      pointer-events: none;
+      background: transparent;
       padding: 0;
       margin: 0;
       color: #fff;
       font-size: 12px;
       font-weight: bold;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8); /* legibilidade no dark */
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
   </style>
 </head>
@@ -83,62 +116,86 @@
     <div id="bairro-nome">Clique em um bairro</div>
 
     <form id="form-avaliacao" style="display: none;">
-      <label for="Seguranca">Segurança</label>
-      <select name="Seguranca" required>
-        <option value="">Selecione</option>
-        <option value="1">1 - Péssimo</option>
-        <option value="2">2 - Ruim</option>
-        <option value="3">3 - Médio</option>
-        <option value="4">4 - Bom</option>
-        <option value="5">5 - Excelente</option>
-      </select>
+      <!-- Segurança -->
+      <div class="rating-group" data-name="Seguranca">
+        <div class="rating-label">Segurança</div>
+        <input class="hidden-input" type="hidden" name="Seguranca" />
+        <div class="rating" role="radiogroup" aria-label="Segurança">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
 
-      <label for="Ruido">Ruído</label>
-      <select name="Ruido" required>
-        <option value="">Selecione</option>
-        <option value="1">1 - Muito alto</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5 - Muito silencioso</option>
-      </select>
+      <!-- Ruído -->
+      <div class="rating-group" data-name="Ruido">
+        <div class="rating-label">Ruído</div>
+        <input class="hidden-input" type="hidden" name="Ruido" />
+        <div class="rating" role="radiogroup" aria-label="Ruído">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
 
-      <label for="Limpeza">Limpeza</label>
-      <select name="Limpeza" required>
-        <option value="">Selecione</option>
-        <option value="1">1 - Muito sujo</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5 - Muito limpo</option>
-      </select>
+      <!-- Limpeza -->
+      <div class="rating-group" data-name="Limpeza">
+        <div class="rating-label">Limpeza</div>
+        <input class="hidden-input" type="hidden" name="Limpeza" />
+        <div class="rating" role="radiogroup" aria-label="Limpeza">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
 
-      <label for="Tranquilidade">Tranquilidade</label>
-      <select name="Tranquilidade" required>
-        <option value="">Selecione</option>
-        <option value="1">1 - Muito agitado</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5 - Muito tranquilo</option>
-      </select>
+      <!-- Tranquilidade -->
+      <div class="rating-group" data-name="Tranquilidade">
+        <div class="rating-label">Tranquilidade</div>
+        <input class="hidden-input" type="hidden" name="Tranquilidade" />
+        <div class="rating" role="radiogroup" aria-label="Tranquilidade">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
 
-      <label for="IdealCriancas">Ideal para crianças?</label>
-      <select name="IdealCriancas" required>
-        <option value="">Selecione</option>
-        <option value="Sim">Sim</option>
-        <option value="Não">Não</option>
-      </select>
+      <!-- Ideal para crianças -->
+      <div class="rating-group" data-name="IdealCriancas">
+        <div class="rating-label">Ideal para crianças</div>
+        <input class="hidden-input" type="hidden" name="IdealCriancas" />
+        <div class="rating" role="radiogroup" aria-label="Ideal para crianças">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
 
-      <label for="OtimosVizinhos">Ótimos vizinhos?</label>
-      <select name="OtimosVizinhos" required>
-        <option value="">Selecione</option>
-        <option value="Sim">Sim</option>
-        <option value="Não">Não</option>
-      </select>
+      <!-- Ótimos vizinhos -->
+      <div class="rating-group" data-name="OtimosVizinhos">
+        <div class="rating-label">Ótimos vizinhos</div>
+        <input class="hidden-input" type="hidden" name="OtimosVizinhos" />
+        <div class="rating" role="radiogroup" aria-label="Ótimos vizinhos">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
 
       <label for="Comentario">Comentário</label>
-      <textarea name="Comentario" rows="3"></textarea>
+      <textarea name="Comentario" rows="3" placeholder="Conte mais sobre sua experiência..."></textarea>
 
       <button type="submit">Enviar Avaliação</button>
     </form>
@@ -178,7 +235,7 @@
       return '#f44336';
     }
 
-    // Calcula “centro” simples pelo média das coordenadas do path
+    // Centro aproximado do polígono (média simples)
     function getPolygonCenter(path) {
       let lat = 0, lng = 0;
       path.forEach(p => { lat += p.lat; lng += p.lng; });
@@ -212,6 +269,45 @@
       return overlay;
     }
 
+    // ---- Estrelas: lógica de seleção/hover e sincronização com <input hidden> ----
+    function setupStarRatings() {
+      document.querySelectorAll('.rating-group').forEach(group => {
+        const hiddenInput = group.querySelector('.hidden-input');
+        const stars = group.querySelectorAll('.star');
+        let current = 0; // valor selecionado
+
+        const paint = (val, hover=false) => {
+          stars.forEach(star => {
+            const v = Number(star.dataset.value);
+            star.classList.toggle(hover ? 'hover' : 'active', v <= val);
+            if (!hover) star.classList.remove('hover');
+          });
+        };
+
+        stars.forEach(star => {
+          star.addEventListener('mouseenter', () => paint(Number(star.dataset.value), true));
+          star.addEventListener('mouseleave', () => paint(current));
+          star.addEventListener('click', () => {
+            current = Number(star.dataset.value);
+            hiddenInput.value = String(current);
+            paint(current);
+          });
+        });
+      });
+    }
+
+    function validateStarsRequired() {
+      const requiredNames = ["Seguranca","Ruido","Limpeza","Tranquilidade","IdealCriancas","OtimosVizinhos"];
+      for (const name of requiredNames) {
+        const val = document.querySelector(`input[name="${name}"]`)?.value;
+        if (!val || isNaN(Number(val)) || Number(val) < 1) {
+          alert(`Selecione de 1 a 5 estrelas para: ${name}.`);
+          return false;
+        }
+      }
+      return true;
+    }
+
     function initMap() {
       navigator.geolocation.getCurrentPosition(pos => {
         const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -222,6 +318,7 @@
           styles: estilosDark
         });
 
+        // Clicar fora dos polígonos fecha o painel
         map.addListener("click", () => {
           document.getElementById("sidebar").style.display = "none";
           document.getElementById("form-avaliacao").style.display = "none";
@@ -257,11 +354,12 @@
               });
               polygon.setMap(map);
 
-              // rótulo puro texto (sem fundo)
+              // Rótulo “Nome (X.X⭐)” ou apenas Nome
               const labelPos = getPolygonCenter(path);
               const labelText = hasRep ? `${bairro.Nome} (${rep.toFixed(1)}⭐)` : bairro.Nome;
               addTextLabel(map, labelPos, labelText);
 
+              // Clique no polígono abre painel
               polygon.addListener("click", () => {
                 bairroSelecionado = bairro.Nome;
                 document.getElementById("bairro-nome").innerText = bairro.Nome;
@@ -270,14 +368,20 @@
                 document.getElementById("map").style.width = "calc(100% - 300px)";
               });
             });
+
+            // Inicializa interações das estrelas após o DOM estar pronto
+            setupStarRatings();
           });
       }, () => {
         alert("Não foi possível obter sua localização.");
       });
     }
 
+    // Envio do formulário
     document.getElementById("form-avaliacao").addEventListener("submit", function (e) {
       e.preventDefault();
+
+      if (!validateStarsRequired()) return;
 
       const formData = new FormData(this);
       const data = {
@@ -299,6 +403,12 @@
         .then(resp => {
           alert("Avaliação enviada com sucesso!");
           this.reset();
+          // Limpa visuais das estrelas após reset
+          document.querySelectorAll('.rating-group').forEach(group => {
+            group.querySelectorAll('.star').forEach(s => {
+              s.classList.remove('active','hover');
+            });
+          });
         })
         .catch(err => {
           alert("Erro ao enviar avaliação.");
@@ -307,6 +417,7 @@
     });
   </script>
 
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"></script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"></script>
 </body>
 </html>
