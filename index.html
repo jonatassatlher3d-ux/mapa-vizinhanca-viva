@@ -14,19 +14,23 @@
 
     #map {
       height: 100%;
-      width: calc(100% - 300px);
-      float: left;
+      width: 100%;
+      transition: width 0.3s;
     }
 
     #sidebar {
       width: 300px;
       height: 100%;
-      float: right;
+      position: absolute;
+      right: 0;
+      top: 0;
       background-color: #1e1e1e;
       color: white;
       padding: 20px;
       box-sizing: border-box;
       overflow-y: auto;
+      display: none;
+      z-index: 2;
     }
 
     label, input, select, textarea, button {
@@ -133,26 +137,9 @@
       { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
       { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
       { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-      {
-        featureType: "administrative.locality",
-        elementType: "labels.text.fill",
-        stylers: [{ color: "#d59563" }]
-      },
-      {
-        featureType: "poi",
-        elementType: "labels.text.fill",
-        stylers: [{ color: "#d59563" }]
-      },
-      {
-        featureType: "poi.park",
-        elementType: "geometry",
-        stylers: [{ color: "#263c3f" }]
-      },
-      {
-        featureType: "poi.park",
-        elementType: "labels.text.fill",
-        stylers: [{ color: "#6b9a76" }]
-      },
+      { featureType: "poi", stylers: [{ visibility: "off" }] },
+      { featureType: "business", stylers: [{ visibility: "off" }] },
+      { featureType: "transit", stylers: [{ visibility: "off" }] },
       {
         featureType: "road",
         elementType: "geometry",
@@ -167,31 +154,6 @@
         featureType: "road",
         elementType: "labels.text.fill",
         stylers: [{ color: "#9ca5b3" }]
-      },
-      {
-        featureType: "road.highway",
-        elementType: "geometry",
-        stylers: [{ color: "#746855" }]
-      },
-      {
-        featureType: "road.highway",
-        elementType: "geometry.stroke",
-        stylers: [{ color: "#1f2835" }]
-      },
-      {
-        featureType: "road.highway",
-        elementType: "labels.text.fill",
-        stylers: [{ color: "#f3d19c" }]
-      },
-      {
-        featureType: "transit",
-        elementType: "geometry",
-        stylers: [{ color: "#2f3948" }]
-      },
-      {
-        featureType: "transit.station",
-        elementType: "labels.text.fill",
-        stylers: [{ color: "#d59563" }]
       },
       {
         featureType: "water",
@@ -210,11 +172,46 @@
       }
     ];
 
+    function showSidebar(nome) {
+      bairroSelecionado = nome;
+      document.getElementById("bairro-nome").innerText = nome;
+      document.getElementById("form-avaliacao").style.display = "block";
+      document.getElementById("sidebar").style.display = "block";
+      document.getElementById("map").style.width = "calc(100% - 300px)";
+    }
+
+    function hideSidebar() {
+      document.getElementById("sidebar").style.display = "none";
+      document.getElementById("map").style.width = "100%";
+    }
+
     function initMap() {
       map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: -20.3155, lng: -40.3128 },
         zoom: 13,
-        styles: estilosDark
+        styles: estilosDark,
+        disableDefaultUI: false
+      });
+
+      // Tenta centralizar na localização do usuário
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            const pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            map.setCenter(pos);
+            map.setZoom(15);
+          },
+          () => {
+            console.warn("Geolocalização negada. Usando centro padrão.");
+          }
+        );
+      }
+
+      map.addListener("click", () => {
+        hideSidebar();
       });
 
       const url = "https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec?action=getBairros";
@@ -242,10 +239,9 @@
 
               polygon.setMap(map);
 
-              polygon.addListener("click", () => {
-                bairroSelecionado = bairro.Nome;
-                document.getElementById("bairro-nome").innerText = bairro.Nome;
-                document.getElementById("form-avaliacao").style.display = "block";
+              polygon.addListener("click", (e) => {
+                showSidebar(bairro.Nome);
+                e.stopPropagation(); // Impede que clique no polígono feche o painel
               });
             }
           });
@@ -275,6 +271,7 @@
         .then(resp => {
           alert("Avaliação enviada com sucesso!");
           this.reset();
+          hideSidebar();
         })
         .catch(err => {
           alert("Erro ao enviar avaliação.");
@@ -283,10 +280,8 @@
     });
   </script>
 
-  <script
-    async
-    defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"
-  ></script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap">
+  </script>
 </body>
 </html>
