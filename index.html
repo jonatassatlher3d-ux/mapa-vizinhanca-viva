@@ -6,163 +6,254 @@
   <title>Mapa Vizinhança Viva</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
+      margin: 0; padding: 0; height: 100%;
       font-family: Arial, sans-serif;
+      background: #000;
     }
 
-    #map {
-      height: 100%;
-      width: 100%;
-      transition: width 0.3s ease;
-    }
+    #map { height: 100%; width: 100%; }
 
+    /* Sidebar overlay (sem flash branco) */
     #sidebar {
-      width: 300px;
-      height: 100%;
-      background-color: #1e1e1e;
-      color: white;
-      padding: 20px;
-      box-sizing: border-box;
-      overflow-y: auto;
-      position: absolute;
-      right: 0;
-      top: 0;
-      display: none;
-      z-index: 1;
+      position: absolute; right: 0; top: 0;
+      width: 300px; height: 100%;
+      background-color: #1e1e1e; color: white;
+      padding: 20px; box-sizing: border-box; overflow-y: auto;
+      z-index: 2;
+      transform: translateX(100%);
+      transition: transform 0.25s ease-in-out;
+      backface-visibility: hidden;
+      will-change: transform;
+      pointer-events: none;
+    }
+    #sidebar.open { transform: translateX(0); pointer-events: auto; }
+
+    h2#sidebar-title {
+      margin: 0 0 10px 0;
+      font-size: 20px; /* mesmo tamanho do título anterior */
+      line-height: 1.2;
     }
 
-    .categoria {
-      display: flex;
-      align-items: center;
-      margin: 5px 0;
+    .desc {
+      font-size: 13px;
+      color: #ddd;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
     }
 
-    .estrela {
-      color: gold;
-      margin-left: 5px;
+    .medias {
+      margin: 10px 0 16px 0;
+      border-top: 1px solid #2a2a2a;
+      border-bottom: 1px solid #2a2a2a;
+      padding: 10px 0;
+    }
+    .media-item {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 6px 0;
+      font-size: 13px;
+    }
+    .media-item .label { color: #bbb; }
+    .media-item .value { color: #fff; font-weight: 600; margin-left: 8px; }
+
+    .stars-inline {
+      display: inline-block;
+      font-size: 14px;
+      color: #666;
+      letter-spacing: 1px;
+    }
+    .stars-inline .on { color: #ffc107; }
+    .stars-inline .off { color: #555; }
+
+    /* Comentários recentes */
+    .comentarios {
+      margin: 10px 0 16px 0;
+      border-bottom: 1px solid #2a2a2a;
+      padding-bottom: 12px;
+    }
+    .comentarios h3 {
+      font-size: 14px; margin: 0 0 8px 0; color: #fff;
+    }
+    .comentarios ul {
+      list-style: none; padding: 0; margin: 0;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .comentarios li {
+      font-size: 12px; color: #ddd; line-height: 1.35;
+      border-left: 2px solid #333; padding-left: 8px;
+      white-space: pre-wrap;
+    }
+    .comentarios .empty {
+      font-size: 12px; color: #999;
     }
 
-    .rating {
-      display: flex;
-      cursor: pointer;
-    }
-
-    .rating span {
-      font-size: 20px;
-      color: gray;
-    }
-
-    .rating span.active {
-      color: gold;
-    }
-
-    label, textarea, button {
-      display: block;
-      margin-top: 10px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    textarea {
-      padding: 5px;
-      border: none;
-      border-radius: 4px;
-    }
-
+    label, textarea, button { display: block; margin-top: 10px; width: 100%; box-sizing: border-box; }
+    textarea { padding: 5px; border: none; border-radius: 4px; }
     button {
-      background-color: #28a745;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+      background-color: #28a745; color: white; padding: 10px;
+      border: none; border-radius: 4px; cursor: pointer; margin-top: 14px;
+    }
+    button[disabled]{ opacity:.6; cursor:not-allowed; }
+    button:hover:not([disabled]){ background-color:#218838; }
+
+    /* Toasts */
+    #toast-container{ position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px; }
+    .toast{
+      padding:12px 16px; border-radius:6px; color:#fff; font-size:14px;
+      box-shadow:0 2px 8px rgba(0,0,0,.3); opacity:0; transform:translateY(20px);
+      animation:slideIn .3s forwards, fadeOut .5s ease forwards 3s;
+    }
+    .toast.success{ background:#28a745; } .toast.error{ background:#dc3545; }
+    @keyframes slideIn { to{ opacity:1; transform:translateY(0); } }
+    @keyframes fadeOut { to{ opacity:0; transform:translateY(20px); } }
+
+    /* Rótulos no mapa (texto puro) */
+    .map-label{
+      position:absolute; transform:translate(-50%, -100%); white-space:nowrap; pointer-events:none;
+      background:transparent; color:#fff; font-size:12px; font-weight:bold; text-shadow:0 1px 2px rgba(0,0,0,.8);
     }
 
-    button:hover {
-      background-color: #218838;
-    }
-
-    #toast {
-      visibility: hidden;
-      min-width: 100px;
-      background-color: #333;
-      color: #fff;
-      text-align: center;
-      border-radius: 5px;
-      padding: 10px;
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1;
-    }
-
-    #toast.show {
-      visibility: visible;
-      animation: fadein 0.5s, fadeout 0.5s 2s;
-    }
-
-    @keyframes fadein {
-      from { bottom: 0; opacity: 0; }
-      to { bottom: 30px; opacity: 1; }
-    }
-
-    @keyframes fadeout {
-      from { bottom: 30px; opacity: 1; }
-      to { bottom: 0; opacity: 0; }
-    }
+    /* Estrelas (form) */
+    .rating-group{ margin-top:8px; }
+    .rating-label{ margin-bottom:4px; font-size:14px; color:#fff; }
+    .rating{ display:inline-flex; gap:6px; user-select:none; }
+    .rating .star{ font-size:22px; cursor:pointer; color:#666; transition:transform .08s ease, color .08s ease; }
+    .rating .star.active,.rating .star.hover{ color:#ffc107; }
+    .rating .star:active{ transform:scale(.92); }
+    .hidden-input{ display:none; }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
   <div id="sidebar">
-    <h2 id="bairro-titulo">Bairro Selecionado</h2>
-    <div id="bairro-descricao" style="margin-bottom:10px;">Clique em um bairro</div>
-    <div id="bairro-medias"></div>
+    <!-- TÍTULO = nome do bairro + reputação -->
+    <h2 id="sidebar-title">Bairro Selecionado</h2>
 
-    <form id="form-avaliacao" style="display: none;">
-      <label>Segurança</label>
-      <div class="rating" data-field="Seguranca"></div>
+    <!-- DESCRIÇÃO (Resumo_IA) -->
+    <div id="bairro-desc" class="desc">Clique em um bairro para ver a descrição.</div>
 
-      <label>Ruído</label>
-      <div class="rating" data-field="Ruido"></div>
+    <!-- RESUMO DAS MÉDIAS (sem “Reputação”) -->
+    <div id="resumo-medias" class="medias"></div>
 
-      <label>Limpeza</label>
-      <div class="rating" data-field="Limpeza"></div>
+    <!-- COMENTÁRIOS RECENTES -->
+    <div id="comentarios" class="comentarios">
+      <h3>Comentários recentes</h3>
+      <div class="empty">Sem comentários ainda.</div>
+    </div>
 
-      <label>Tranquilidade</label>
-      <div class="rating" data-field="Tranquilidade"></div>
+    <!-- FORMULÁRIO -->
+    <form id="form-avaliacao" style="display:none;">
+      <!-- Segurança -->
+      <div class="rating-group" data-name="Seguranca">
+        <div class="rating-label">Segurança</div>
+        <input class="hidden-input" type="hidden" name="Seguranca" />
+        <div class="rating" role="radiogroup" aria-label="Segurança">
+          <span class="star" data-value="1">★</span><span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span><span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
 
-      <label>Ideal para crianças?</label>
-      <select name="IdealCriancas" required>
-        <option value="">Selecione</option>
-        <option value="Sim">Sim</option>
-        <option value="Não">Não</option>
-      </select>
+      <!-- Ruído -->
+      <div class="rating-group" data-name="Ruido">
+        <div class="rating-label">Ruído</div>
+        <input class="hidden-input" type="hidden" name="Ruido" />
+        <div class="rating" role="radiogroup" aria-label="Ruído">
+          <span class="star" data-value="1">★</span><span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span><span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
 
-      <label>Ótimos vizinhos?</label>
-      <select name="OtimosVizinhos" required>
-        <option value="">Selecione</option>
-        <option value="Sim">Sim</option>
-        <option value="Não">Não</option>
-      </select>
+      <!-- Limpeza -->
+      <div class="rating-group" data-name="Limpeza">
+        <div class="rating-label">Limpeza</div>
+        <input class="hidden-input" type="hidden" name="Limpeza" />
+        <div class="rating" role="radiogroup" aria-label="Limpeza">
+          <span class="star" data-value="1">★</span><span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span><span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
 
-      <label>Comentário</label>
-      <textarea name="Comentario" rows="3"></textarea>
+      <!-- Tranquilidade -->
+      <div class="rating-group" data-name="Tranquilidade">
+        <div class="rating-label">Tranquilidade</div>
+        <input class="hidden-input" type="hidden" name="Tranquilidade" />
+        <div class="rating" role="radiogroup" aria-label="Tranquilidade">
+          <span class="star" data-value="1">★</span><span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span><span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
 
-      <button type="submit" id="btn-enviar">Enviar Avaliação</button>
+      <!-- Ideal para crianças -->
+      <div class="rating-group" data-name="IdealCriancas">
+        <div class="rating-label">Ideal para crianças</div>
+        <input class="hidden-input" type="hidden" name="IdealCriancas" />
+        <div class="rating" role="radiogroup" aria-label="Ideal para crianças">
+          <span class="star" data-value="1">★</span><span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span><span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
+
+      <!-- Ótimos vizinhos -->
+      <div class="rating-group" data-name="OtimosVizinhos">
+        <div class="rating-label">Ótimos vizinhos</div>
+        <input class="hidden-input" type="hidden" name="OtimosVizinhos" />
+        <div class="rating" role="radiogroup" aria-label="Ótimos vizinhos">
+          <span class="star" data-value="1">★</span><span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span><span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
+
+      <label for="Comentario">Comentário</label>
+      <textarea name="Comentario" rows="3" placeholder="Conte mais sobre sua experiência..."></textarea>
+
+      <button id="submit-btn" type="submit">Enviar Avaliação</button>
     </form>
   </div>
 
-  <div id="toast">Enviado!</div>
+  <!-- Toasts -->
+  <div id="toast-container"></div>
 
   <script>
     let map;
     let bairroSelecionado = "";
-    let ratings = {};
+    let isSubmitting = false;
+
+    const estilosDark = [
+      { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+      { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+      { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+      { featureType: "poi", stylers: [{ visibility: "off" }] },
+      { featureType: "poi.business", stylers: [{ visibility: "off" }] },
+      { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
+      { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
+      { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+      { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
+      { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
+      { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
+      { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
+      { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f3948" }] },
+      { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+      { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
+      { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] }
+    ];
+
+    const WEBAPP_GET = "https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec?action=getBairros";
+    const WEBAPP_POST = "https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec";
+
+    function showToast(msg, type="success"){
+      const c=document.getElementById("toast-container");
+      const t=document.createElement("div");
+      t.className=`toast ${type}`; t.textContent=msg; c.appendChild(t);
+      setTimeout(()=>t.remove(),4000);
+    }
 
     function getCorByReputacao(rep) {
       if (isNaN(rep)) return '#ffffff';
@@ -173,155 +264,235 @@
       return '#f44336';
     }
 
-    const estilosDark = [
-      { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-      { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-      { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-      { featureType: "poi", stylers: [{ visibility: "off" }] },
-      { featureType: "poi.business", stylers: [{ visibility: "off" }] },
-      { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
-      { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
-      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
-      { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
-      { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
-      { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
-      { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
-      { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
-      { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] }
-    ];
+    function getPolygonCenter(path){
+      let lat=0,lng=0; path.forEach(p=>{lat+=p.lat; lng+=p.lng;});
+      return {lat:lat/path.length, lng:lng/path.length};
+    }
 
-    function criarEstrelas(container, field) {
-      container.innerHTML = "";
-      for (let i = 1; i <= 5; i++) {
-        const span = document.createElement("span");
-        span.innerHTML = "★";
-        span.addEventListener("click", () => {
-          ratings[field] = i;
-          Array.from(container.children).forEach((s, idx) => {
-            s.classList.toggle("active", idx < i);
+    function addTextLabel(map, position, text){
+      const div=document.createElement('div'); div.className='map-label'; div.textContent=text;
+      const ov=new google.maps.OverlayView();
+      ov.onAdd=function(){ this.getPanes().overlayLayer.appendChild(div); };
+      ov.draw=function(){
+        const proj=this.getProjection(); if(!proj) return;
+        const pt=proj.fromLatLngToDivPixel(new google.maps.LatLng(position.lat, position.lng));
+        if(pt){ div.style.left=pt.x+'px'; div.style.top=pt.y+'px'; }
+      };
+      ov.onRemove=function(){ if(div.parentNode) div.parentNode.removeChild(div); };
+      ov.setMap(map); return ov;
+    }
+
+    // Estrelas do formulário
+    function setupStarRatings(){
+      document.querySelectorAll('.rating-group').forEach(group=>{
+        const hidden=group.querySelector('.hidden-input');
+        const stars=group.querySelectorAll('.star');
+        let current=0;
+        const paint=(val,hover=false)=>{
+          stars.forEach(s=>{
+            const v=+s.dataset.value;
+            s.classList.toggle(hover?'hover':'active', v<=val);
+            if(!hover) s.classList.remove('hover');
+          });
+        };
+        stars.forEach(s=>{
+          s.addEventListener('mouseenter',()=>paint(+s.dataset.value,true));
+          s.addEventListener('mouseleave',()=>paint(current));
+          s.addEventListener('click',()=>{
+            current=+s.dataset.value; hidden.value=String(current); paint(current);
           });
         });
-        container.appendChild(span);
+      });
+    }
+
+    function validateStarsRequired(){
+      const req=["Seguranca","Ruido","Limpeza","Tranquilidade","IdealCriancas","OtimosVizinhos"];
+      for(const name of req){
+        const v=document.querySelector(`input[name="${name}"]`)?.value;
+        if(!v){ showToast(`Selecione as estrelas para: ${name}`,"error"); return false; }
+      }
+      return true;
+    }
+
+    function renderStarsInline(val){
+      const n = Math.max(0, Math.min(5, Math.round(val || 0)));
+      let html = "";
+      for (let i=1;i<=5;i++){
+        html += `<span class="${i<=n?'on':'off'}">★</span>`;
+      }
+      return html;
+    }
+
+    function fillComentarios(raw) {
+      const cont = document.getElementById("comentarios");
+      // Limpa (mantendo o título h3)
+      cont.innerHTML = `<h3>Comentários recentes</h3>`;
+      const texto = (raw ?? "").toString().trim();
+
+      if (!texto) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Sem comentários ainda.";
+        cont.appendChild(empty);
+        return;
+      }
+
+      const itens = texto
+        .split(/\r?\n|\|/g)
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+        .slice(0, 5);
+
+      if (itens.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Sem comentários ainda.";
+        cont.appendChild(empty);
+        return;
+      }
+
+      const ul = document.createElement("ul");
+      itens.forEach(t => {
+        const li = document.createElement("li");
+        li.textContent = t;
+        ul.appendChild(li);
+      });
+      cont.appendChild(ul);
+    }
+
+    function formatPtDecimal(val){
+      const n = Number(val);
+      if (!isNaN(n)) return n.toFixed(1).replace('.', ',');
+      return '';
+    }
+
+    function openSidebar(bairro) {
+      bairroSelecionado = bairro.Nome;
+
+      // Título com reputação: Nome (X,X⭐)
+      const repTxt = formatPtDecimal(bairro.ReputacaoComp);
+      const titulo = repTxt ? `${bairro.Nome} (${repTxt}⭐)` : `${bairro.Nome}`;
+      document.getElementById("sidebar-title").innerText = titulo;
+
+      // Descrição
+      document.getElementById("bairro-desc").innerText = (bairro.Resumo_IA || "Sem descrição disponível.");
+
+      // Resumo das médias (sem “Reputação”)
+      const mediasEl = document.getElementById("resumo-medias");
+      const mk = (v)=> isNaN(parseFloat(v)) ? 0 : parseFloat(v);
+      const itens = [
+        // { label: "Reputação", val: mk(bairro.ReputacaoComp) }, // REMOVIDO
+        { label: "Segurança", val: mk(bairro.Seguranca) },
+        { label: "Ruído", val: mk(bairro.Ruido) },
+        { label: "Limpeza", val: mk(bairro.Limpeza) },
+        { label: "Tranquilidade", val: mk(bairro.Tranquilidade) },
+        { label: "Ideal p/ crianças", val: mk(bairro.IdealCriancas) },
+        { label: "Ótimos vizinhos", val: mk(bairro.OtimosVizinhos) }
+      ];
+      mediasEl.innerHTML = itens.map(i => `
+        <div class="media-item">
+          <span class="label">${i.label}</span>
+          <span class="value">
+            <span class="stars-inline">${renderStarsInline(i.val)}</span>
+            ${i.val ? i.val.toFixed(1) : "—"}
+          </span>
+        </div>
+      `).join("");
+
+      // Comentários
+      fillComentarios(bairro.Comentarios);
+
+      // Abre painel e mostra form
+      document.getElementById("form-avaliacao").style.display = "block";
+      document.getElementById("sidebar").classList.add("open");
+    }
+
+    function closeSidebar(){
+      document.getElementById("form-avaliacao").style.display="none";
+      document.getElementById("sidebar").classList.remove("open");
+    }
+
+    function initMap(){
+      const start = (center)=> {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center, zoom: 15, styles: estilosDark, streetViewControl:false, mapTypeControl:false
+        });
+
+        // Fechar ao clicar no mapa
+        map.addListener("click", closeSidebar);
+
+        // Carrega polígonos + rótulos centrais (NOME (X.X⭐) no mapa)
+        fetch(WEBAPP_GET)
+          .then(r=>r.json())
+          .then(rows=>{
+            rows.forEach(bairro=>{
+              if(!bairro.Poligono) return;
+              const path=bairro.Poligono.split(";").map(p=>{
+                const [lat,lng]=p.trim().split(",").map(Number);
+                return {lat, lng};
+              });
+              const rep=parseFloat(bairro.ReputacaoComp);
+              const hasRep=!isNaN(rep) && rep>0;
+              const cor=hasRep?getCorByReputacao(rep):"#ffffff";
+
+              const poly=new google.maps.Polygon({
+                paths:path, strokeColor:cor, strokeOpacity:.9, strokeWeight:2,
+                fillColor:cor, fillOpacity:hasRep?0.35:0.0
+              });
+              poly.setMap(map);
+
+              const labelPos=getPolygonCenter(path);
+              const labelText=hasRep?`${bairro.Nome} (${rep.toFixed(1)}⭐)`:bairro.Nome; // (mantido como antes)
+              addTextLabel(map,labelPos,labelText);
+
+              poly.addListener("click", ()=> openSidebar(bairro));
+            });
+            setupStarRatings();
+          })
+          .catch(()=>showToast("Erro ao carregar bairros.","error"));
+      };
+
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(
+          pos=>start({lat:pos.coords.latitude,lng:pos.coords.longitude}),
+          ()=>start({lat:-20.3155,lng:-40.3128}) // fallback
+        );
+      } else {
+        start({lat:-20.3155,lng:-40.3128});
       }
     }
 
-    function initMap() {
-      navigator.geolocation.getCurrentPosition(pos => {
-        const userLocation = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude
-        };
-
-        map = new google.maps.Map(document.getElementById("map"), {
-          center: userLocation,
-          zoom: 15,
-          styles: estilosDark
-        });
-
-        map.addListener("click", () => {
-          document.getElementById("sidebar").style.display = "none";
-          document.getElementById("map").style.width = "100%";
-        });
-
-        const url = "https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec?action=getBairros";
-
-        fetch(url)
-          .then(resp => resp.json())
-          .then(data => {
-            data.forEach(bairro => {
-              if (bairro.Poligono) {
-                const path = bairro.Poligono.split(";").map(p => {
-                  const [lat, lng] = p.trim().split(",").map(Number);
-                  return { lat, lng };
-                });
-
-                const cor = getCorByReputacao(parseFloat(bairro.ReputacaoComp));
-                const polygon = new google.maps.Polygon({
-                  paths: path,
-                  strokeColor: cor,
-                  strokeOpacity: 0.8,
-                  strokeWeight: 2,
-                  fillColor: cor,
-                  fillOpacity: 0.35,
-                });
-
-                polygon.setMap(map);
-
-                polygon.addListener("click", () => {
-                  bairroSelecionado = bairro.Nome;
-                  document.getElementById("bairro-titulo").innerText =
-                    `${bairro.Nome} (${bairro.ReputacaoComp}⭐)`;
-                  document.getElementById("bairro-descricao").innerText =
-                    bairro.Resumo_IA || "Sem descrição disponível.";
-
-                  // Exibir médias (exceto reputação)
-                  const mediasDiv = document.getElementById("bairro-medias");
-                  mediasDiv.innerHTML = "";
-                  ["Seguranca", "Ruido", "Limpeza", "Tranquilidade"].forEach(cat => {
-                    if (bairro[cat]) {
-                      mediasDiv.innerHTML += `<div class="categoria">${cat}: ${bairro[cat]}<span class="estrela">★</span></div>`;
-                    }
-                  });
-
-                  document.getElementById("sidebar").style.display = "block";
-                  document.getElementById("form-avaliacao").style.display = "block";
-                  document.getElementById("map").style.width = "calc(100% - 300px)";
-                });
-              }
-            });
-          });
-
-        // Inicializa estrelas do formulário
-        document.querySelectorAll(".rating").forEach(r => {
-          criarEstrelas(r, r.dataset.field);
-        });
-
-      }, () => {
-        alert("Não foi possível obter sua localização.");
-      });
-    }
-
-    document.getElementById("form-avaliacao").addEventListener("submit", function (e) {
+    // Envio do formulário (preservado: toasts + anti-duplo clique)
+    document.getElementById("form-avaliacao").addEventListener("submit", async function(e){
       e.preventDefault();
-      const btn = document.getElementById("btn-enviar");
-      btn.disabled = true;
-      btn.innerText = "Enviando...";
+      if(isSubmitting) return;
+      if(!validateStarsRequired()) return;
 
-      const formData = new FormData(this);
-      const data = {
-        Bairro: bairroSelecionado,
-        Seguranca: ratings.Seguranca || 0,
-        Ruido: ratings.Ruido || 0,
-        Limpeza: ratings.Limpeza || 0,
-        Tranquilidade: ratings.Tranquilidade || 0,
-        IdealCriancas: formData.get("IdealCriancas"),
-        OtimosVizinhos: formData.get("OtimosVizinhos"),
-        Comentario: formData.get("Comentario")
-      };
+      const btn=document.getElementById("submit-btn");
+      const originalText=btn.textContent;
+      isSubmitting=true; btn.disabled=true; btn.textContent="Enviando…";
 
-      fetch("https://script.google.com/macros/s/AKfycbwPoPvZ9rvlxi_zKNFLU9PUylYNOmb9it6sSiY1FYGbQTeZVvXiCLi47iRK5ZE_t4oOXg/exec", {
-        method: "POST",
-        body: JSON.stringify(data)
-      })
-      .then(resp => resp.json())
-      .then(() => {
-        const toast = document.getElementById("toast");
-        toast.className = "show";
-        setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2500);
+      const fd=new FormData(this);
+      const data={}; fd.forEach((v,k)=>data[k]=v);
+      data.Bairro=bairroSelecionado;
+
+      try{
+        const resp=await fetch(WEBAPP_POST,{ method:"POST", body:JSON.stringify(data) });
+        await resp.json();
+        showToast("Avaliação enviada com sucesso!","success");
         this.reset();
-        ratings = {};
-        document.querySelectorAll(".rating").forEach(r => criarEstrelas(r, r.dataset.field));
-      })
-      .catch(err => console.error(err))
-      .finally(() => {
-        btn.disabled = false;
-        btn.innerText = "Enviar Avaliação";
-      });
+        document.querySelectorAll('.star').forEach(s=>s.classList.remove('active','hover'));
+        document.querySelectorAll('.hidden-input').forEach(i=>i.value="");
+        closeSidebar();
+      }catch{
+        showToast("Erro ao enviar avaliação.","error");
+      }finally{
+        btn.disabled=false; btn.textContent=originalText; isSubmitting=false;
+      }
     });
   </script>
 
   <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap">
-  </script>
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDUUK4AquwV07HbeSvPb7clw_dcc216Ik&callback=initMap"></script>
 </body>
 </html>
